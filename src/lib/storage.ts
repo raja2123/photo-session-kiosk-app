@@ -7,8 +7,18 @@ interface Session {
   pin: string;
   photographerId: string;
   createdAt: Date;
-  photos: string[];
+  photos: Photo[];
   status: 'active' | 'completed' | 'printed';
+}
+
+interface Photo {
+  id: string;
+  sessionId: string;
+  originalName: string;
+  fileName: string;
+  uploadedAt: Date;
+  url: string;
+  thumbnailUrl?: string;
 }
 
 interface Photographer {
@@ -18,6 +28,7 @@ interface Photographer {
   password: string;
   isActive: boolean;
   createdAt: Date;
+  lastLogin?: Date;
 }
 
 interface BundlePlan {
@@ -26,6 +37,7 @@ interface BundlePlan {
   photoLimit: number;
   price: number;
   description: string;
+  isActive: boolean;
 }
 
 interface Order {
@@ -33,20 +45,71 @@ interface Order {
   sessionId: string;
   bundlePlan: BundlePlan;
   selectedPhotos: string[];
-  editedPhotos: { [key: string]: any };
+  editedPhotos: { [key: string]: EditedPhoto };
   totalAmount: number;
-  status: 'pending' | 'paid' | 'printed';
+  status: 'pending' | 'paid' | 'printed' | 'cancelled';
   createdAt: Date;
+  customerInfo?: {
+    name?: string;
+    email?: string;
+    phone?: string;
+  };
+}
+
+interface EditedPhoto {
+  photoId: string;
+  edits: {
+    filter?: string;
+    brightness?: number;
+    contrast?: number;
+    saturation?: number;
+    crop?: {
+      x: number;
+      y: number;
+      width: number;
+      height: number;
+    };
+    border?: {
+      style: string;
+      color: string;
+      thickness: number;
+      radius: number;
+    };
+    rotation?: number;
+    mirrored?: boolean;
+  };
+  editedUrl?: string;
 }
 
 interface Location {
   id: string;
   name: string;
   description?: string;
+  isActive: boolean;
+}
+
+interface Admin {
+  id: string;
+  username: string;
+  password: string;
+  name: string;
+  createdAt: Date;
+  lastLogin?: Date;
+}
+
+interface AppSettings {
+  companyName: string;
+  currency: string;
+  taxRate: number;
+  printSettings: {
+    quality: 'standard' | 'high' | 'premium';
+    paperSize: 'A4' | '4x6' | '5x7' | '8x10';
+  };
 }
 
 class LocalStorage {
   private static instance: LocalStorage;
+  private sessionFolders: Map<string, string[]> = new Map();
 
   static getInstance(): LocalStorage {
     if (!LocalStorage.instance) {
@@ -57,6 +120,15 @@ class LocalStorage {
 
   // Initialize default data
   init() {
+    this.initPhotographers();
+    this.initBundlePlans();
+    this.initLocations();
+    this.initAdmin();
+    this.initSettings();
+    this.loadSessionFolders();
+  }
+
+  private initPhotographers() {
     if (!this.getPhotographers().length) {
       this.addPhotographer({
         id: '1',
@@ -67,26 +139,68 @@ class LocalStorage {
         createdAt: new Date()
       });
     }
+  }
 
+  private initBundlePlans() {
     if (!this.getBundlePlans().length) {
       const defaultPlans: BundlePlan[] = [
-        { id: '1', name: 'Basic', photoLimit: 2, price: 100, description: 'Perfect for a few memorable shots' },
-        { id: '2', name: 'Standard', photoLimit: 5, price: 250, description: 'Great for small groups' },
-        { id: '3', name: 'Premium', photoLimit: 10, price: 500, description: 'Ideal for families' },
-        { id: '4', name: 'Unlimited', photoLimit: 20, price: 1000, description: 'Maximum value package' }
+        { id: '1', name: 'Basic', photoLimit: 2, price: 100, description: 'Perfect for a few memorable shots', isActive: true },
+        { id: '2', name: 'Standard', photoLimit: 5, price: 250, description: 'Great for small groups', isActive: true },
+        { id: '3', name: 'Premium', photoLimit: 10, price: 500, description: 'Ideal for families', isActive: true },
+        { id: '4', name: 'Unlimited', photoLimit: 20, price: 1000, description: 'Maximum value package', isActive: true }
       ];
       defaultPlans.forEach(plan => this.addBundlePlan(plan));
     }
+  }
 
+  private initLocations() {
     if (!this.getLocations().length) {
       const defaultLocations: Location[] = [
-        { id: '1', name: 'Beach Resort', description: 'Beautiful beachside location' },
-        { id: '2', name: 'Mountain View', description: 'Scenic mountain backdrop' },
-        { id: '3', name: 'City Park', description: 'Urban park setting' },
-        { id: '4', name: 'Wedding Hall', description: 'Indoor elegant venue' }
+        { id: '1', name: 'Beach Resort', description: 'Beautiful beachside location', isActive: true },
+        { id: '2', name: 'Mountain View', description: 'Scenic mountain backdrop', isActive: true },
+        { id: '3', name: 'City Park', description: 'Urban park setting', isActive: true },
+        { id: '4', name: 'Wedding Hall', description: 'Indoor elegant venue', isActive: true }
       ];
       defaultLocations.forEach(location => this.addLocation(location));
     }
+  }
+
+  private initAdmin() {
+    if (!this.getAdmins().length) {
+      this.addAdmin({
+        id: '1',
+        username: 'admin',
+        password: 'admin123',
+        name: 'System Administrator',
+        createdAt: new Date()
+      });
+    }
+  }
+
+  private initSettings() {
+    if (!this.getSettings()) {
+      const defaultSettings: AppSettings = {
+        companyName: 'PhotoKiosk Pro',
+        currency: 'INR',
+        taxRate: 18,
+        printSettings: {
+          quality: 'high',
+          paperSize: '4x6'
+        }
+      };
+      this.updateSettings(defaultSettings);
+    }
+  }
+
+  private loadSessionFolders() {
+    const folders = localStorage.getItem('sessionFolders');
+    if (folders) {
+      this.sessionFolders = new Map(JSON.parse(folders));
+    }
+  }
+
+  private saveSessionFolders() {
+    localStorage.setItem('sessionFolders', JSON.stringify(Array.from(this.sessionFolders.entries())));
   }
 
   // Photographers
@@ -116,7 +230,12 @@ class LocalStorage {
 
   authenticatePhotographer(email: string, password: string): Photographer | null {
     const photographers = this.getPhotographers();
-    return photographers.find(p => p.email === email && p.password === password && p.isActive) || null;
+    const photographer = photographers.find(p => p.email === email && p.password === password && p.isActive);
+    if (photographer) {
+      this.updatePhotographer(photographer.id, { lastLogin: new Date() });
+      return photographer;
+    }
+    return null;
   }
 
   // Sessions
@@ -128,6 +247,9 @@ class LocalStorage {
     const sessions = this.getSessions();
     sessions.push(session);
     localStorage.setItem('sessions', JSON.stringify(sessions));
+    
+    // Create session folder structure
+    this.createSessionFolder(session.id);
   }
 
   updateSession(id: string, updates: Partial<Session>) {
@@ -142,6 +264,9 @@ class LocalStorage {
   deleteSession(id: string) {
     const sessions = this.getSessions().filter(s => s.id !== id);
     localStorage.setItem('sessions', JSON.stringify(sessions));
+    
+    // Remove session folder
+    this.deleteSessionFolder(id);
   }
 
   getSessionById(id: string): Session | null {
@@ -154,6 +279,52 @@ class LocalStorage {
     return sessions.filter(s => 
       s.name.toLowerCase().includes(name.toLowerCase())
     );
+  }
+
+  // Session Folder Management
+  createSessionFolder(sessionId: string) {
+    this.sessionFolders.set(sessionId, []);
+    this.saveSessionFolders();
+  }
+
+  addPhotoToSession(sessionId: string, photo: Photo) {
+    const session = this.getSessionById(sessionId);
+    if (session) {
+      session.photos.push(photo);
+      this.updateSession(sessionId, { photos: session.photos });
+      
+      // Add to folder structure
+      const folderFiles = this.sessionFolders.get(sessionId) || [];
+      folderFiles.push(photo.fileName);
+      this.sessionFolders.set(sessionId, folderFiles);
+      this.saveSessionFolders();
+    }
+  }
+
+  removePhotoFromSession(sessionId: string, photoId: string) {
+    const session = this.getSessionById(sessionId);
+    if (session) {
+      const photo = session.photos.find(p => p.id === photoId);
+      session.photos = session.photos.filter(p => p.id !== photoId);
+      this.updateSession(sessionId, { photos: session.photos });
+      
+      // Remove from folder structure
+      if (photo) {
+        const folderFiles = this.sessionFolders.get(sessionId) || [];
+        const updatedFiles = folderFiles.filter(f => f !== photo.fileName);
+        this.sessionFolders.set(sessionId, updatedFiles);
+        this.saveSessionFolders();
+      }
+    }
+  }
+
+  deleteSessionFolder(sessionId: string) {
+    this.sessionFolders.delete(sessionId);
+    this.saveSessionFolders();
+  }
+
+  getSessionFiles(sessionId: string): string[] {
+    return this.sessionFolders.get(sessionId) || [];
   }
 
   // Bundle Plans
@@ -206,6 +377,11 @@ class LocalStorage {
     return orders.filter(o => o.sessionId === sessionId);
   }
 
+  getOrderById(id: string): Order | null {
+    const orders = this.getOrders();
+    return orders.find(o => o.id === id) || null;
+  }
+
   // Locations
   getLocations(): Location[] {
     return JSON.parse(localStorage.getItem('locations') || '[]');
@@ -231,16 +407,122 @@ class LocalStorage {
     localStorage.setItem('locations', JSON.stringify(locations));
   }
 
-  // Generate unique IDs
+  // Admin
+  getAdmins(): Admin[] {
+    return JSON.parse(localStorage.getItem('admins') || '[]');
+  }
+
+  addAdmin(admin: Admin) {
+    const admins = this.getAdmins();
+    admins.push(admin);
+    localStorage.setItem('admins', JSON.stringify(admins));
+  }
+
+  authenticateAdmin(username: string, password: string): Admin | null {
+    const admins = this.getAdmins();
+    const admin = admins.find(a => a.username === username && a.password === password);
+    if (admin) {
+      this.updateAdmin(admin.id, { lastLogin: new Date() });
+      return admin;
+    }
+    return null;
+  }
+
+  updateAdmin(id: string, updates: Partial<Admin>) {
+    const admins = this.getAdmins();
+    const index = admins.findIndex(a => a.id === id);
+    if (index !== -1) {
+      admins[index] = { ...admins[index], ...updates };
+      localStorage.setItem('admins', JSON.stringify(admins));
+    }
+  }
+
+  // Settings
+  getSettings(): AppSettings | null {
+    const settings = localStorage.getItem('appSettings');
+    return settings ? JSON.parse(settings) : null;
+  }
+
+  updateSettings(settings: AppSettings) {
+    localStorage.setItem('appSettings', JSON.stringify(settings));
+  }
+
+  // Statistics
+  getStatistics() {
+    const sessions = this.getSessions();
+    const orders = this.getOrders();
+    const photographers = this.getPhotographers();
+
+    return {
+      totalSessions: sessions.length,
+      activeSessions: sessions.filter(s => s.status === 'active').length,
+      completedSessions: sessions.filter(s => s.status === 'completed').length,
+      printedSessions: sessions.filter(s => s.status === 'printed').length,
+      totalOrders: orders.length,
+      pendingOrders: orders.filter(o => o.status === 'pending').length,
+      paidOrders: orders.filter(o => o.status === 'paid').length,
+      totalRevenue: orders.filter(o => o.status === 'paid').reduce((sum, order) => sum + order.totalAmount, 0),
+      activePhotographers: photographers.filter(p => p.isActive).length
+    };
+  }
+
+  // Utility functions
   generateId(): string {
     return Date.now().toString(36) + Math.random().toString(36).substr(2);
   }
 
-  // Generate session PIN
   generatePin(): string {
     return Math.floor(1000 + Math.random() * 9000).toString();
+  }
+
+  generateSessionId(name: string): string {
+    const cleanName = name.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
+    const timestamp = Date.now().toString().slice(-6);
+    return `${cleanName.slice(0, 6)}${timestamp}`;
+  }
+
+  // Data export/import for backup
+  exportData() {
+    return {
+      photographers: this.getPhotographers(),
+      sessions: this.getSessions(),
+      orders: this.getOrders(),
+      bundlePlans: this.getBundlePlans(),
+      locations: this.getLocations(),
+      admins: this.getAdmins(),
+      settings: this.getSettings(),
+      sessionFolders: Array.from(this.sessionFolders.entries()),
+      exportDate: new Date()
+    };
+  }
+
+  importData(data: any) {
+    if (data.photographers) localStorage.setItem('photographers', JSON.stringify(data.photographers));
+    if (data.sessions) localStorage.setItem('sessions', JSON.stringify(data.sessions));
+    if (data.orders) localStorage.setItem('orders', JSON.stringify(data.orders));
+    if (data.bundlePlans) localStorage.setItem('bundlePlans', JSON.stringify(data.bundlePlans));
+    if (data.locations) localStorage.setItem('locations', JSON.stringify(data.locations));
+    if (data.admins) localStorage.setItem('admins', JSON.stringify(data.admins));
+    if (data.settings) localStorage.setItem('appSettings', JSON.stringify(data.settings));
+    if (data.sessionFolders) {
+      this.sessionFolders = new Map(data.sessionFolders);
+      this.saveSessionFolders();
+    }
+  }
+
+  // Clear all data (for reset)
+  clearAllData() {
+    localStorage.removeItem('photographers');
+    localStorage.removeItem('sessions');
+    localStorage.removeItem('orders');
+    localStorage.removeItem('bundlePlans');
+    localStorage.removeItem('locations');
+    localStorage.removeItem('admins');
+    localStorage.removeItem('appSettings');
+    localStorage.removeItem('sessionFolders');
+    this.sessionFolders.clear();
   }
 }
 
 export const storage = LocalStorage.getInstance();
-export type { Session, Photographer, BundlePlan, Order, Location };
+export type { Session, Photographer, BundlePlan, Order, Location, Admin, Photo, EditedPhoto, AppSettings };
