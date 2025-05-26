@@ -1,17 +1,16 @@
 
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Camera } from 'lucide-react';
+import { Camera, ArrowLeft, Eye, EyeOff } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { storage } from '@/lib/storage';
 
 const PhotographerLogin = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [credentials, setCredentials] = useState({ username: '', password: '' });
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -21,27 +20,24 @@ const PhotographerLogin = () => {
     setLoading(true);
 
     try {
-      const photographer = storage.authenticatePhotographer(email, password);
-      
-      if (photographer) {
-        // Store photographer session
-        localStorage.setItem('currentPhotographer', JSON.stringify(photographer));
+      // Demo credentials
+      if (credentials.username === 'photographer' && credentials.password === 'photo123') {
         toast({
           title: "Login Successful",
-          description: `Welcome back, ${photographer.name}!`,
+          description: "Welcome to the photographer dashboard!",
         });
         navigate('/photographer/dashboard');
       } else {
         toast({
           title: "Login Failed",
-          description: "Invalid email or password. Please try again.",
+          description: "Invalid username or password.",
           variant: "destructive",
         });
       }
     } catch (error) {
       toast({
         title: "Error",
-        description: "An error occurred during login. Please try again.",
+        description: "An error occurred during login.",
         variant: "destructive",
       });
     } finally {
@@ -50,59 +46,73 @@ const PhotographerLogin = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 via-teal-50 to-cyan-50 flex items-center justify-center">
+    <div className="min-h-screen bg-gradient-to-br from-emerald-400 via-teal-500 to-cyan-600 flex items-center justify-center">
       <div className="w-full max-w-md p-4">
         {/* Back Button */}
         <div className="mb-6">
           <Link to="/">
-            <Button variant="ghost" className="text-green-600 hover:text-green-700">
+            <Button variant="ghost" className="text-white hover:bg-white/20">
               <ArrowLeft className="w-4 h-4 mr-2" />
               Back to Home
             </Button>
           </Link>
         </div>
 
-        <Card className="shadow-xl border-0 bg-white/90 backdrop-blur">
-          <CardHeader className="text-center pb-4">
-            <div className="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4">
-              <Camera className="w-8 h-8 text-green-600" />
+        <Card className="shadow-2xl border-0 bg-gradient-to-br from-white/95 to-emerald-50/95 backdrop-blur-sm">
+          <CardHeader className="text-center pb-6">
+            <div className="mx-auto w-20 h-20 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-full flex items-center justify-center mb-4 shadow-lg">
+              <Camera className="w-10 h-10 text-white" />
             </div>
-            <CardTitle className="text-2xl text-green-700">Photographer Login</CardTitle>
+            <CardTitle className="text-3xl bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">
+              Photographer Login
+            </CardTitle>
             <CardDescription className="text-gray-600">
-              Access your photo session dashboard
+              Access your photography dashboard
             </CardDescription>
           </CardHeader>
+          
           <CardContent>
-            <form onSubmit={handleLogin} className="space-y-4">
+            <form onSubmit={handleLogin} className="space-y-6">
               <div className="space-y-2">
-                <Label htmlFor="email">Email Address</Label>
+                <Label htmlFor="username" className="text-gray-700">Username</Label>
                 <Input
-                  id="email"
-                  type="email"
-                  placeholder="john@photo.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  id="username"
+                  type="text"
+                  placeholder="Enter username"
+                  value={credentials.username}
+                  onChange={(e) => setCredentials({...credentials, username: e.target.value})}
                   required
-                  className="border-gray-300 focus:border-green-500"
+                  className="border-gray-300 focus:border-emerald-500 bg-white/90"
                 />
               </div>
-              
+
               <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
-                <Input
-                  id="password"
-                  type="password"
-                  placeholder="Enter your password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  className="border-gray-300 focus:border-green-500"
-                />
+                <Label htmlFor="password" className="text-gray-700">Password</Label>
+                <div className="relative">
+                  <Input
+                    id="password"
+                    type={showPassword ? "text" : "password"}
+                    placeholder="Enter password"
+                    value={credentials.password}
+                    onChange={(e) => setCredentials({...credentials, password: e.target.value})}
+                    required
+                    className="border-gray-300 focus:border-emerald-500 bg-white/90 pr-12"
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="absolute right-2 top-1/2 transform -translate-y-1/2 h-8 w-8 p-0 hover:bg-gray-100"
+                    onClick={() => setShowPassword(!showPassword)}
+                  >
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </Button>
+                </div>
               </div>
 
               <Button 
                 type="submit" 
-                className="w-full bg-green-600 hover:bg-green-700 text-white"
+                className="w-full bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white shadow-lg hover:shadow-xl transition-all duration-300"
                 disabled={loading}
               >
                 {loading ? 'Signing In...' : 'Sign In'}
@@ -110,10 +120,10 @@ const PhotographerLogin = () => {
             </form>
 
             {/* Demo Credentials */}
-            <div className="mt-6 p-3 bg-green-50 rounded-lg border border-green-200">
-              <p className="text-sm text-green-700 font-medium mb-1">Demo Credentials:</p>
-              <p className="text-xs text-green-600">Email: john@photo.com</p>
-              <p className="text-xs text-green-600">Password: password123</p>
+            <div className="mt-6 p-4 bg-gradient-to-r from-emerald-50 to-teal-50 rounded-lg border border-emerald-200">
+              <p className="text-sm text-emerald-700 font-medium mb-1">Demo Credentials:</p>
+              <p className="text-xs text-emerald-600">Username: photographer</p>
+              <p className="text-xs text-emerald-600">Password: photo123</p>
             </div>
           </CardContent>
         </Card>

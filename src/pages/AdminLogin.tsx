@@ -1,7 +1,7 @@
 
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Settings } from 'lucide-react';
+import { Shield, ArrowLeft, Eye, EyeOff } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,8 +9,8 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 
 const AdminLogin = () => {
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
+  const [credentials, setCredentials] = useState({ username: '', password: '' });
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -20,25 +20,24 @@ const AdminLogin = () => {
     setLoading(true);
 
     try {
-      // Simple admin authentication
-      if (username === 'admin' && password === 'admin123') {
-        localStorage.setItem('isAdminLoggedIn', 'true');
+      // Demo credentials
+      if (credentials.username === 'admin' && credentials.password === 'admin123') {
         toast({
-          title: "Login Successful",
+          title: "Admin Login Successful",
           description: "Welcome to the admin dashboard!",
         });
         navigate('/admin/dashboard');
       } else {
         toast({
           title: "Login Failed",
-          description: "Invalid username or password. Please try again.",
+          description: "Invalid admin credentials.",
           variant: "destructive",
         });
       }
     } catch (error) {
       toast({
         title: "Error",
-        description: "An error occurred during login. Please try again.",
+        description: "An error occurred during login.",
         variant: "destructive",
       });
     } finally {
@@ -47,70 +46,84 @@ const AdminLogin = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-red-50 flex items-center justify-center">
+    <div className="min-h-screen bg-gradient-to-br from-orange-400 via-red-500 to-pink-600 flex items-center justify-center">
       <div className="w-full max-w-md p-4">
         {/* Back Button */}
         <div className="mb-6">
           <Link to="/">
-            <Button variant="ghost" className="text-purple-600 hover:text-purple-700">
+            <Button variant="ghost" className="text-white hover:bg-white/20">
               <ArrowLeft className="w-4 h-4 mr-2" />
               Back to Home
             </Button>
           </Link>
         </div>
 
-        <Card className="shadow-xl border-0 bg-white/90 backdrop-blur">
-          <CardHeader className="text-center pb-4">
-            <div className="mx-auto w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mb-4">
-              <Settings className="w-8 h-8 text-purple-600" />
+        <Card className="shadow-2xl border-0 bg-gradient-to-br from-white/95 to-orange-50/95 backdrop-blur-sm">
+          <CardHeader className="text-center pb-6">
+            <div className="mx-auto w-20 h-20 bg-gradient-to-br from-orange-500 to-red-600 rounded-full flex items-center justify-center mb-4 shadow-lg">
+              <Shield className="w-10 h-10 text-white" />
             </div>
-            <CardTitle className="text-2xl text-purple-700">Admin Login</CardTitle>
+            <CardTitle className="text-3xl bg-gradient-to-r from-orange-600 to-red-600 bg-clip-text text-transparent">
+              Admin Login
+            </CardTitle>
             <CardDescription className="text-gray-600">
-              Access the administrative dashboard
+              System administration access
             </CardDescription>
           </CardHeader>
+          
           <CardContent>
-            <form onSubmit={handleLogin} className="space-y-4">
+            <form onSubmit={handleLogin} className="space-y-6">
               <div className="space-y-2">
-                <Label htmlFor="username">Username</Label>
+                <Label htmlFor="username" className="text-gray-700">Admin Username</Label>
                 <Input
                   id="username"
                   type="text"
-                  placeholder="admin"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
+                  placeholder="Enter admin username"
+                  value={credentials.username}
+                  onChange={(e) => setCredentials({...credentials, username: e.target.value})}
                   required
-                  className="border-gray-300 focus:border-purple-500"
+                  className="border-gray-300 focus:border-orange-500 bg-white/90"
                 />
               </div>
-              
+
               <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
-                <Input
-                  id="password"
-                  type="password"
-                  placeholder="Enter admin password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  className="border-gray-300 focus:border-purple-500"
-                />
+                <Label htmlFor="password" className="text-gray-700">Admin Password</Label>
+                <div className="relative">
+                  <Input
+                    id="password"
+                    type={showPassword ? "text" : "password"}
+                    placeholder="Enter admin password"
+                    value={credentials.password}
+                    onChange={(e) => setCredentials({...credentials, password: e.target.value})}
+                    required
+                    className="border-gray-300 focus:border-orange-500 bg-white/90 pr-12"
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="absolute right-2 top-1/2 transform -translate-y-1/2 h-8 w-8 p-0 hover:bg-gray-100"
+                    onClick={() => setShowPassword(!showPassword)}
+                  >
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </Button>
+                </div>
               </div>
 
               <Button 
                 type="submit" 
-                className="w-full bg-purple-600 hover:bg-purple-700 text-white"
+                className="w-full bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 text-white shadow-lg hover:shadow-xl transition-all duration-300"
                 disabled={loading}
               >
-                {loading ? 'Signing In...' : 'Sign In'}
+                {loading ? 'Accessing...' : 'Access Admin Panel'}
               </Button>
             </form>
 
             {/* Demo Credentials */}
-            <div className="mt-6 p-3 bg-purple-50 rounded-lg border border-purple-200">
-              <p className="text-sm text-purple-700 font-medium mb-1">Demo Credentials:</p>
-              <p className="text-xs text-purple-600">Username: admin</p>
-              <p className="text-xs text-purple-600">Password: admin123</p>
+            <div className="mt-6 p-4 bg-gradient-to-r from-orange-50 to-red-50 rounded-lg border border-orange-200">
+              <p className="text-sm text-orange-700 font-medium mb-1">Demo Credentials:</p>
+              <p className="text-xs text-orange-600">Username: admin</p>
+              <p className="text-xs text-orange-600">Password: admin123</p>
             </div>
           </CardContent>
         </Card>

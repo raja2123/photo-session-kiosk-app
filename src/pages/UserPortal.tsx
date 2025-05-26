@@ -1,185 +1,140 @@
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowLeft, Search, Camera, MapPin, Calendar } from 'lucide-react';
+import { Search, Camera, ArrowLeft } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Badge } from '@/components/ui/badge';
-import { storage, Session } from '@/lib/storage';
 
 const UserPortal = () => {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [searchResults, setSearchResults] = useState<Session[]>([]);
-  const [allSessions, setAllSessions] = useState<Session[]>([]);
-  const [hasSearched, setHasSearched] = useState(false);
+  const [sessionSearch, setSessionSearch] = useState('');
+  const [searchResults, setSearchResults] = useState<any[]>([]);
 
-  useEffect(() => {
-    // Load all active sessions for display
-    const sessions = storage.getSessions().filter(s => s.status === 'active');
-    setAllSessions(sessions);
-  }, []);
-
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!searchTerm.trim()) return;
-
-    const results = storage.searchSessions(searchTerm);
-    setSearchResults(results.filter(s => s.status === 'active'));
-    setHasSearched(true);
+  const handleSearch = () => {
+    // Mock search results for demo
+    const mockResults = [
+      {
+        id: 'SESS001',
+        name: 'Wedding Photography - Sarah & John',
+        location: 'Central Park',
+        date: '2024-01-15'
+      },
+      {
+        id: 'SESS002', 
+        name: 'Birthday Party - Emma',
+        location: 'Garden Venue',
+        date: '2024-01-10'
+      }
+    ];
+    
+    if (sessionSearch.trim()) {
+      setSearchResults(mockResults.filter(session => 
+        session.name.toLowerCase().includes(sessionSearch.toLowerCase()) ||
+        session.id.toLowerCase().includes(sessionSearch.toLowerCase())
+      ));
+    }
   };
 
-  const displaySessions = hasSearched ? searchResults : allSessions.slice(0, 6);
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
-      <div className="container mx-auto px-4 py-6">
-        {/* Header */}
-        <div className="mb-6">
-          <Link to="/">
-            <Button variant="ghost" className="text-blue-600 hover:text-blue-700 mb-4">
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Back to Home
-            </Button>
-          </Link>
-          <h1 className="text-3xl font-bold text-gray-800 mb-2">Find Your Photos</h1>
-          <p className="text-gray-600">Search for your photo session and view your memories</p>
+    <div className="min-h-screen bg-gradient-to-br from-cyan-400 via-blue-500 to-purple-600">
+      {/* Header */}
+      <div className="bg-gradient-to-r from-blue-600/20 to-purple-600/20 backdrop-blur-sm">
+        <div className="container mx-auto px-4 py-6">
+          <div className="flex items-center justify-between">
+            <Link to="/">
+              <Button variant="ghost" className="text-white hover:bg-white/20">
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Back to Home
+              </Button>
+            </Link>
+            <h1 className="text-3xl font-bold text-white">User Portal</h1>
+            <div></div>
+          </div>
         </div>
+      </div>
 
-        {/* Search Section */}
-        <Card className="shadow-xl border-0 bg-white/90 backdrop-blur mb-8">
-          <CardHeader className="text-center">
-            <div className="mx-auto w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mb-4">
-              <Search className="w-8 h-8 text-blue-600" />
-            </div>
-            <CardTitle className="text-2xl text-blue-700">Search Photo Sessions</CardTitle>
-            <CardDescription>
-              Enter the session name provided by your photographer
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSearch} className="space-y-4">
+      <div className="container mx-auto px-4 py-12">
+        <div className="max-w-2xl mx-auto">
+          {/* Welcome Card */}
+          <Card className="mb-8 bg-gradient-to-br from-white/95 to-blue-50/95 backdrop-blur-sm border-0 shadow-2xl">
+            <CardHeader className="text-center">
+              <div className="mx-auto w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center mb-4">
+                <Camera className="w-10 h-10 text-white" />
+              </div>
+              <CardTitle className="text-3xl bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                Find Your Photos
+              </CardTitle>
+              <CardDescription className="text-lg text-gray-600">
+                Enter your session ID or session name to access your photos
+              </CardDescription>
+            </CardHeader>
+          </Card>
+
+          {/* Search Section */}
+          <Card className="bg-gradient-to-br from-white/95 to-indigo-50/95 backdrop-blur-sm border-0 shadow-2xl">
+            <CardHeader>
+              <CardTitle className="text-xl text-gray-800">Search Sessions</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="search">Session Name</Label>
+                <Label htmlFor="search" className="text-gray-700">Session ID or Name</Label>
                 <div className="flex gap-2">
                   <Input
                     id="search"
-                    type="text"
-                    placeholder="e.g., Smith Family Wedding, Beach Photoshoot"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="border-gray-300 focus:border-blue-500 flex-1"
+                    placeholder="Enter session ID or name..."
+                    value={sessionSearch}
+                    onChange={(e) => setSessionSearch(e.target.value)}
+                    className="flex-1 border-gray-300 focus:border-blue-500 bg-white/90"
+                    onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
                   />
-                  <Button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white px-6">
+                  <Button 
+                    onClick={handleSearch}
+                    className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white px-8"
+                  >
                     <Search className="w-4 h-4 mr-2" />
                     Search
                   </Button>
                 </div>
               </div>
-            </form>
-          </CardContent>
-        </Card>
 
-        {/* Results Section */}
-        <div className="mb-6">
-          <h2 className="text-2xl font-bold text-gray-800 mb-4">
-            {hasSearched ? (
-              searchResults.length > 0 ? `Found ${searchResults.length} session(s)` : 'No sessions found'
-            ) : (
-              'Recent Photo Sessions'
-            )}
-          </h2>
-          {hasSearched && searchResults.length === 0 && (
-            <Card className="text-center py-8">
-              <CardContent>
-                <Camera className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-gray-500 mb-2">No sessions found</h3>
-                <p className="text-gray-400 mb-4">
-                  Please check the session name and try again, or contact your photographer
-                </p>
-                <Button 
-                  onClick={() => {
-                    setSearchTerm('');
-                    setHasSearched(false);
-                  }}
-                  variant="outline"
-                >
-                  View All Sessions
-                </Button>
-              </CardContent>
-            </Card>
-          )}
+              {/* Search Results */}
+              {searchResults.length > 0 && (
+                <div className="space-y-3 mt-6">
+                  <h3 className="font-semibold text-gray-800">Search Results:</h3>
+                  {searchResults.map((session) => (
+                    <Card key={session.id} className="bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 hover:shadow-lg transition-all duration-300">
+                      <CardContent className="p-4">
+                        <div className="flex justify-between items-center">
+                          <div>
+                            <h4 className="font-semibold text-gray-800">{session.name}</h4>
+                            <p className="text-sm text-gray-600">ID: {session.id}</p>
+                            <p className="text-sm text-gray-600">Location: {session.location}</p>
+                            <p className="text-sm text-gray-600">Date: {session.date}</p>
+                          </div>
+                          <Link to={`/user/session/${session.id}`}>
+                            <Button className="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white">
+                              Access Session
+                            </Button>
+                          </Link>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              )}
+
+              {/* Demo Info */}
+              <div className="mt-8 p-4 bg-gradient-to-r from-yellow-50 to-orange-50 rounded-lg border border-yellow-200">
+                <h4 className="font-semibold text-orange-800 mb-2">Demo Sessions Available:</h4>
+                <div className="space-y-1 text-sm text-orange-700">
+                  <p>• Session ID: SESS001 - Wedding Photography</p>
+                  <p>• Session ID: SESS002 - Birthday Party</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </div>
-
-        {/* Sessions Grid */}
-        {displaySessions.length > 0 && (
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {displaySessions.map((session) => (
-              <Card key={session.id} className="hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 bg-white border-2 border-blue-100">
-                <CardHeader className="pb-3">
-                  <div className="flex justify-between items-start mb-2">
-                    <CardTitle className="text-lg font-semibold text-gray-800 leading-tight">
-                      {session.name}
-                    </CardTitle>
-                    <Badge className="bg-green-100 text-green-800">
-                      {session.photos.length} photos
-                    </Badge>
-                  </div>
-                  <div className="space-y-2 text-sm text-gray-600">
-                    <div className="flex items-center gap-2">
-                      <MapPin className="w-4 h-4" />
-                      <span>{session.location}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Calendar className="w-4 h-4" />
-                      <span>{new Date(session.createdAt).toLocaleDateString()}</span>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent className="pt-0">
-                  <div className="space-y-3">
-                    <div className="bg-blue-50 p-3 rounded-lg">
-                      <p className="text-sm font-medium text-blue-800">Session ID</p>
-                      <p className="text-blue-600 font-mono">{session.id}</p>
-                    </div>
-                    <Link to={`/user/session/${session.id}`} className="block">
-                      <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white">
-                        <Camera className="w-4 h-4 mr-2" />
-                        Access Session
-                      </Button>
-                    </Link>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        )}
-
-        {/* Help Section */}
-        <Card className="mt-8 bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
-          <CardContent className="p-6">
-            <h3 className="font-semibold text-lg text-blue-800 mb-3">Need Help?</h3>
-            <div className="grid md:grid-cols-2 gap-4 text-sm text-blue-700">
-              <div>
-                <h4 className="font-medium mb-2">Finding Your Session:</h4>
-                <ul className="space-y-1">
-                  <li>• Ask your photographer for the session name</li>
-                  <li>• Session names are usually descriptive (e.g., "Wedding Photos")</li>
-                  <li>• Search is case-insensitive</li>
-                </ul>
-              </div>
-              <div>
-                <h4 className="font-medium mb-2">Accessing Photos:</h4>
-                <ul className="space-y-1">
-                  <li>• You'll need a 4-digit PIN from your photographer</li>
-                  <li>• Choose a bundle plan to select your photos</li>
-                  <li>• Edit and customize your selected photos</li>
-                </ul>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
       </div>
     </div>
   );
