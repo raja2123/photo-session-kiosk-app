@@ -46,7 +46,7 @@ const AdminLogin = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-400 via-red-500 to-pink-600 flex items-center justify-center">
+    <div className="min-h-screen bg-gradient-to-br from-blue-900 via-blue-800 to-blue-700 flex items-center justify-center">
       <div className="w-full max-w-md p-4">
         {/* Back Button */}
         <div className="mb-6">
@@ -58,12 +58,12 @@ const AdminLogin = () => {
           </Link>
         </div>
 
-        <Card className="shadow-2xl border-0 bg-gradient-to-br from-white/95 to-orange-50/95 backdrop-blur-sm">
+        <Card className="shadow-2xl border-0 bg-white/95 backdrop-blur-sm">
           <CardHeader className="text-center pb-6">
-            <div className="mx-auto w-20 h-20 bg-gradient-to-br from-orange-500 to-red-600 rounded-full flex items-center justify-center mb-4 shadow-lg">
+            <div className="mx-auto w-20 h-20 bg-gradient-to-br from-amber-500 to-orange-600 rounded-full flex items-center justify-center mb-4 shadow-lg">
               <Shield className="w-10 h-10 text-white" />
             </div>
-            <CardTitle className="text-3xl bg-gradient-to-r from-orange-600 to-red-600 bg-clip-text text-transparent">
+            <CardTitle className="text-3xl text-amber-700 font-bold">
               Admin Login
             </CardTitle>
             <CardDescription className="text-gray-600">
@@ -82,7 +82,7 @@ const AdminLogin = () => {
                   value={credentials.username}
                   onChange={(e) => setCredentials({...credentials, username: e.target.value})}
                   required
-                  className="border-gray-300 focus:border-orange-500 bg-white/90"
+                  className="border-gray-300 focus:border-amber-500 bg-white/90"
                 />
               </div>
 
@@ -96,7 +96,7 @@ const AdminLogin = () => {
                     value={credentials.password}
                     onChange={(e) => setCredentials({...credentials, password: e.target.value})}
                     required
-                    className="border-gray-300 focus:border-orange-500 bg-white/90 pr-12"
+                    className="border-gray-300 focus:border-amber-500 bg-white/90 pr-12"
                   />
                   <Button
                     type="button"
@@ -112,7 +112,7 @@ const AdminLogin = () => {
 
               <Button 
                 type="submit" 
-                className="w-full bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 text-white shadow-lg hover:shadow-xl transition-all duration-300"
+                className="w-full bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white shadow-lg hover:shadow-xl transition-all duration-300"
                 disabled={loading}
               >
                 {loading ? 'Accessing...' : 'Access Admin Panel'}
@@ -120,10 +120,10 @@ const AdminLogin = () => {
             </form>
 
             {/* Demo Credentials */}
-            <div className="mt-6 p-4 bg-gradient-to-r from-orange-50 to-red-50 rounded-lg border border-orange-200">
-              <p className="text-sm text-orange-700 font-medium mb-1">Demo Credentials:</p>
-              <p className="text-xs text-orange-600">Username: admin</p>
-              <p className="text-xs text-orange-600">Password: admin123</p>
+            <div className="mt-6 p-4 bg-amber-50 rounded-lg border border-amber-200">
+              <p className="text-sm text-amber-700 font-medium mb-1">Demo Credentials:</p>
+              <p className="text-xs text-amber-600">Username: admin</p>
+              <p className="text-xs text-amber-600">Password: admin123</p>
             </div>
           </CardContent>
         </Card>

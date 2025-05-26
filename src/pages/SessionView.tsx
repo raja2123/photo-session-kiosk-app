@@ -46,7 +46,7 @@ const SessionView = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-400 via-purple-500 to-pink-600 flex items-center justify-center">
+    <div className="min-h-screen bg-gradient-to-br from-blue-900 via-blue-800 to-blue-700 flex items-center justify-center">
       <div className="w-full max-w-md p-4">
         {/* Back Button */}
         <div className="mb-6">
@@ -58,12 +58,12 @@ const SessionView = () => {
           </Link>
         </div>
 
-        <Card className="shadow-2xl border-0 bg-gradient-to-br from-white/95 to-indigo-50/95 backdrop-blur-sm">
+        <Card className="shadow-2xl border-0 bg-white/95 backdrop-blur-sm">
           <CardHeader className="text-center pb-6">
             <div className="mx-auto w-20 h-20 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center mb-4 shadow-lg">
               <Lock className="w-10 h-10 text-white" />
             </div>
-            <CardTitle className="text-3xl bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+            <CardTitle className="text-3xl text-indigo-700 font-bold">
               Session Access
             </CardTitle>
             <CardDescription className="text-gray-600 text-lg">
@@ -97,9 +97,9 @@ const SessionView = () => {
             </form>
 
             {/* Demo PIN Info */}
-            <div className="mt-6 p-4 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-lg border border-indigo-200">
-              <p className="text-sm text-indigo-700 font-medium mb-1">Demo PIN:</p>
-              <p className="text-xs text-indigo-600">PIN: 1234</p>
+            <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+              <p className="text-sm text-blue-700 font-medium mb-1">Demo PIN:</p>
+              <p className="text-xs text-blue-600">PIN: 1234</p>
             </div>
           </CardContent>
         </Card>

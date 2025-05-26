@@ -46,7 +46,7 @@ const PhotographerLogin = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-emerald-400 via-teal-500 to-cyan-600 flex items-center justify-center">
+    <div className="min-h-screen bg-gradient-to-br from-blue-900 via-blue-800 to-blue-700 flex items-center justify-center">
       <div className="w-full max-w-md p-4">
         {/* Back Button */}
         <div className="mb-6">
@@ -58,12 +58,12 @@ const PhotographerLogin = () => {
           </Link>
         </div>
 
-        <Card className="shadow-2xl border-0 bg-gradient-to-br from-white/95 to-emerald-50/95 backdrop-blur-sm">
+        <Card className="shadow-2xl border-0 bg-white/95 backdrop-blur-sm">
           <CardHeader className="text-center pb-6">
             <div className="mx-auto w-20 h-20 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-full flex items-center justify-center mb-4 shadow-lg">
               <Camera className="w-10 h-10 text-white" />
             </div>
-            <CardTitle className="text-3xl bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">
+            <CardTitle className="text-3xl text-emerald-700 font-bold">
               Photographer Login
             </CardTitle>
             <CardDescription className="text-gray-600">
@@ -120,7 +120,7 @@ const PhotographerLogin = () => {
             </form>
 
             {/* Demo Credentials */}
-            <div className="mt-6 p-4 bg-gradient-to-r from-emerald-50 to-teal-50 rounded-lg border border-emerald-200">
+            <div className="mt-6 p-4 bg-emerald-50 rounded-lg border border-emerald-200">
               <p className="text-sm text-emerald-700 font-medium mb-1">Demo Credentials:</p>
               <p className="text-xs text-emerald-600">Username: photographer</p>
               <p className="text-xs text-emerald-600">Password: photo123</p>
