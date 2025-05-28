@@ -1,12 +1,12 @@
 
 import { useState, useEffect } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Edit, ShoppingCart, RotateCw, Palette, Crop, Frame } from 'lucide-react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { ArrowLeft, ShoppingCart } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Slider } from '@/components/ui/slider';
 import { useToast } from '@/hooks/use-toast';
 import { storage, Session } from '@/lib/storage';
+import TUIImageEditor from '@/components/TUIImageEditor';
 
 const PhotoEditor = () => {
   const { sessionId } = useParams();
@@ -14,16 +14,9 @@ const PhotoEditor = () => {
   const [selectedPhoto, setSelectedPhoto] = useState<string | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [selectedPhotos, setSelectedPhotos] = useState<string[]>([]);
-  const [editSettings, setEditSettings] = useState({
-    brightness: 50,
-    contrast: 50,
-    saturation: 50,
-    rotation: 0,
-    filter: 'none'
-  });
+  const [editedPhotos, setEditedPhotos] = useState<{ [key: string]: string }>({});
+  const [showEditor, setShowEditor] = useState(false);
   const { toast } = useToast();
-
-  const filters = ['none', 'sepia', 'grayscale', 'vintage', 'warm', 'cool'];
 
   useEffect(() => {
     if (sessionId) {
@@ -42,44 +35,32 @@ const PhotoEditor = () => {
     }
   }, [sessionId]);
 
-  const handleEditChange = (key: string, value: number | string) => {
-    setEditSettings(prev => ({ ...prev, [key]: value }));
+  const handleEditPhoto = () => {
+    if (selectedPhoto) {
+      setShowEditor(true);
+    }
   };
 
-  const getFilterStyle = () => {
-    const { brightness, contrast, saturation, rotation, filter } = editSettings;
-    
-    let filterString = `brightness(${brightness}%) contrast(${contrast}%) saturate(${saturation}%)`;
-    
-    switch (filter) {
-      case 'sepia':
-        filterString += ' sepia(100%)';
-        break;
-      case 'grayscale':
-        filterString += ' grayscale(100%)';
-        break;
-      case 'vintage':
-        filterString += ' sepia(50%) contrast(120%) brightness(110%)';
-        break;
-      case 'warm':
-        filterString += ' hue-rotate(15deg) saturate(120%)';
-        break;
-      case 'cool':
-        filterString += ' hue-rotate(-15deg) saturate(110%)';
-        break;
+  const handleSaveEdit = (editedImageData: string) => {
+    if (selectedPhoto) {
+      setEditedPhotos(prev => ({ ...prev, [selectedPhoto]: editedImageData }));
+      setShowEditor(false);
+      toast({
+        title: "Photo Edited",
+        description: "Your photo has been successfully edited.",
+      });
     }
-    
-    return {
-      filter: filterString,
-      transform: `rotate(${rotation}deg)`
-    };
+  };
+
+  const handleCloseEditor = () => {
+    setShowEditor(false);
   };
 
   const proceedToCheckout = () => {
     // Store edit settings for checkout
     localStorage.setItem(`editedPhotos_${sessionId}`, JSON.stringify({
       photoIds: selectedPhotos,
-      settings: editSettings
+      editedPhotos: editedPhotos
     }));
     
     toast({
@@ -100,6 +81,18 @@ const PhotoEditor = () => {
             <Button>Back to Search</Button>
           </Link>
         </div>
+      </div>
+    );
+  }
+
+  if (showEditor && currentPhoto) {
+    return (
+      <div className="min-h-screen bg-gray-100 p-4">
+        <TUIImageEditor
+          imageUrl={editedPhotos[selectedPhoto!] || currentPhoto.url}
+          onSave={handleSaveEdit}
+          onClose={handleCloseEditor}
+        />
       </div>
     );
   }
@@ -128,6 +121,7 @@ const PhotoEditor = () => {
               <div className="space-y-3">
                 {selectedPhotos.map((photoId) => {
                   const photo = session.photos.find(p => p.id === photoId);
+                  const isEdited = editedPhotos[photoId];
                   return (
                     <div
                       key={photoId}
@@ -136,11 +130,18 @@ const PhotoEditor = () => {
                       }`}
                       onClick={() => setSelectedPhoto(photoId)}
                     >
-                      <img
-                        src={photo?.url}
-                        alt={photo?.originalName}
-                        className="w-full h-20 object-cover"
-                      />
+                      <div className="relative">
+                        <img
+                          src={isEdited || photo?.url}
+                          alt={photo?.originalName}
+                          className="w-full h-20 object-cover"
+                        />
+                        {isEdited && (
+                          <div className="absolute top-1 right-1 bg-green-500 text-white text-xs px-1 rounded">
+                            Edited
+                          </div>
+                        )}
+                      </div>
                       <div className="p-2 text-xs text-gray-600">
                         {photo?.originalName}
                       </div>
@@ -152,132 +153,36 @@ const PhotoEditor = () => {
           </Card>
 
           {/* Main Photo Display */}
-          <Card className="lg:col-span-1">
+          <Card className="lg:col-span-2">
             <CardHeader>
-              <CardTitle className="text-lg">Preview</CardTitle>
+              <CardTitle className="text-lg flex items-center justify-between">
+                Preview
+                {currentPhoto && (
+                  <Button
+                    onClick={handleEditPhoto}
+                    className="bg-purple-600 hover:bg-purple-700"
+                  >
+                    Edit Photo
+                  </Button>
+                )}
+              </CardTitle>
             </CardHeader>
             <CardContent>
               {currentPhoto && (
                 <div className="aspect-square bg-gray-100 rounded-lg overflow-hidden">
                   <img
-                    src={currentPhoto.url}
+                    src={editedPhotos[selectedPhoto!] || currentPhoto.url}
                     alt={currentPhoto.originalName}
                     className="w-full h-full object-cover"
-                    style={getFilterStyle()}
                   />
                 </div>
               )}
-            </CardContent>
-          </Card>
-
-          {/* Editing Controls */}
-          <Card className="lg:col-span-1">
-            <CardHeader>
-              <CardTitle className="text-lg flex items-center">
-                <Edit className="w-5 h-5 mr-2" />
-                Edit Controls
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              {/* Filters */}
-              <div>
-                <label className="text-sm font-medium mb-2 block">Filter</label>
-                <div className="grid grid-cols-2 gap-2">
-                  {filters.map((filter) => (
-                    <Button
-                      key={filter}
-                      variant={editSettings.filter === filter ? "default" : "outline"}
-                      size="sm"
-                      onClick={() => handleEditChange('filter', filter)}
-                      className="capitalize"
-                    >
-                      {filter}
-                    </Button>
-                  ))}
+              
+              {!currentPhoto && (
+                <div className="aspect-square bg-gray-100 rounded-lg flex items-center justify-center">
+                  <p className="text-gray-500">Select a photo to preview</p>
                 </div>
-              </div>
-
-              {/* Brightness */}
-              <div>
-                <label className="text-sm font-medium mb-2 block">
-                  Brightness: {editSettings.brightness}%
-                </label>
-                <Slider
-                  value={[editSettings.brightness]}
-                  onValueChange={(value) => handleEditChange('brightness', value[0])}
-                  min={0}
-                  max={200}
-                  step={1}
-                />
-              </div>
-
-              {/* Contrast */}
-              <div>
-                <label className="text-sm font-medium mb-2 block">
-                  Contrast: {editSettings.contrast}%
-                </label>
-                <Slider
-                  value={[editSettings.contrast]}
-                  onValueChange={(value) => handleEditChange('contrast', value[0])}
-                  min={0}
-                  max={200}
-                  step={1}
-                />
-              </div>
-
-              {/* Saturation */}
-              <div>
-                <label className="text-sm font-medium mb-2 block">
-                  Saturation: {editSettings.saturation}%
-                </label>
-                <Slider
-                  value={[editSettings.saturation]}
-                  onValueChange={(value) => handleEditChange('saturation', value[0])}
-                  min={0}
-                  max={200}
-                  step={1}
-                />
-              </div>
-
-              {/* Rotation */}
-              <div>
-                <label className="text-sm font-medium mb-2 block">
-                  Rotation: {editSettings.rotation}°
-                </label>
-                <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleEditChange('rotation', editSettings.rotation - 90)}
-                  >
-                    <RotateCw className="w-4 h-4 mr-1 rotate-180" />
-                    -90°
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleEditChange('rotation', editSettings.rotation + 90)}
-                  >
-                    <RotateCw className="w-4 h-4 mr-1" />
-                    +90°
-                  </Button>
-                </div>
-              </div>
-
-              {/* Reset */}
-              <Button
-                variant="outline"
-                className="w-full"
-                onClick={() => setEditSettings({
-                  brightness: 50,
-                  contrast: 50,
-                  saturation: 50,
-                  rotation: 0,
-                  filter: 'none'
-                })}
-              >
-                Reset All
-              </Button>
+              )}
             </CardContent>
           </Card>
         </div>
@@ -286,6 +191,11 @@ const PhotoEditor = () => {
         <div className="flex justify-between items-center mt-8">
           <div className="text-gray-600">
             {selectedPhotos.length} photos ready for editing
+            {Object.keys(editedPhotos).length > 0 && (
+              <span className="ml-2 text-green-600">
+                ({Object.keys(editedPhotos).length} edited)
+              </span>
+            )}
           </div>
           <Button
             onClick={proceedToCheckout}

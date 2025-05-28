@@ -15,8 +15,8 @@ const Index = () => {
           <p className="text-xl text-gray-600">Professional Photo Session Management System</p>
         </div>
 
-        {/* Login Options */}
-        <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+        {/* Login Options - Only User and Photographer */}
+        <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
           {/* User Portal */}
           <Card className="hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2 bg-white border-2 border-blue-200">
             <CardHeader className="text-center pb-4">
@@ -52,26 +52,6 @@ const Index = () => {
               <Link to="/photographer">
                 <Button className="w-full bg-green-600 hover:bg-green-700 text-white text-lg py-3">
                   Photographer Login
-                </Button>
-              </Link>
-            </CardContent>
-          </Card>
-
-          {/* Admin Portal */}
-          <Card className="hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2 bg-white border-2 border-purple-200">
-            <CardHeader className="text-center pb-4">
-              <div className="mx-auto w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mb-4">
-                <Settings className="w-8 h-8 text-purple-600" />
-              </div>
-              <CardTitle className="text-2xl text-purple-700">Admin Panel</CardTitle>
-              <CardDescription className="text-gray-600">
-                Manage photographers, pricing, and system settings
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="text-center">
-              <Link to="/admin">
-                <Button className="w-full bg-purple-600 hover:bg-purple-700 text-white text-lg py-3">
-                  Admin Login
                 </Button>
               </Link>
             </CardContent>

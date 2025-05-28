@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { ArrowLeft, Camera, Upload, Trash2 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -7,12 +7,21 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
+import { storage, Session } from '@/lib/storage';
+import { fileManager } from '@/lib/fileManager';
 
 const SessionManagement = () => {
   const { sessionId } = useParams();
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
-  const [uploadedPhotos, setUploadedPhotos] = useState<string[]>([]);
+  const [session, setSession] = useState<Session | null>(null);
   const { toast } = useToast();
+
+  useEffect(() => {
+    if (sessionId) {
+      const sessionData = storage.getSessionById(sessionId);
+      setSession(sessionData);
+    }
+  }, [sessionId]);
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
@@ -26,16 +35,54 @@ const SessionManagement = () => {
     setSelectedFiles(prev => prev.filter((_, i) => i !== index));
   };
 
-  const uploadToSession = () => {
-    // Simulate photo upload
-    const newPhotos = selectedFiles.map((file, index) => 
-      `photo_${Date.now()}_${index}.jpg`
-    );
-    setUploadedPhotos(prev => [...prev, ...newPhotos]);
-    setSelectedFiles([]);
+  const uploadToSession = async () => {
+    if (!sessionId) return;
+
+    try {
+      const results = await fileManager.processMultiplePhotoUploads(sessionId, selectedFiles as any);
+      
+      const successCount = results.filter(r => r.success).length;
+      const failCount = results.filter(r => !r.success).length;
+      
+      if (successCount > 0) {
+        // Refresh session data
+        const updatedSession = storage.getSessionById(sessionId);
+        setSession(updatedSession);
+        
+        toast({
+          title: "Photos Uploaded",
+          description: `${successCount} photos uploaded successfully!`,
+        });
+      }
+      
+      if (failCount > 0) {
+        toast({
+          title: "Upload Issues",
+          description: `${failCount} photos failed to upload.`,
+          variant: "destructive",
+        });
+      }
+      
+      setSelectedFiles([]);
+    } catch (error) {
+      toast({
+        title: "Upload Failed",
+        description: "Failed to upload photos. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const removeUploadedPhoto = (photoId: string) => {
+    if (!sessionId) return;
+    
+    storage.removePhotoFromSession(sessionId, photoId);
+    const updatedSession = storage.getSessionById(sessionId);
+    setSession(updatedSession);
+    
     toast({
-      title: "Photos Uploaded",
-      description: `${newPhotos.length} photos uploaded to session successfully!`,
+      title: "Photo Removed",
+      description: "Photo has been removed from the session.",
     });
   };
 
@@ -98,6 +145,9 @@ const SessionManagement = () => {
                         >
                           <Trash2 className="w-4 h-4" />
                         </Button>
+                        <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 text-white p-1 text-xs truncate">
+                          {file.name}
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -115,17 +165,30 @@ const SessionManagement = () => {
         </Card>
 
         {/* Uploaded Photos Grid */}
-        {uploadedPhotos.length > 0 && (
+        {session && session.photos.length > 0 && (
           <Card className="shadow-xl border-0 bg-white/90 backdrop-blur">
             <CardHeader>
-              <CardTitle className="text-green-700">Session Photos ({uploadedPhotos.length})</CardTitle>
+              <CardTitle className="text-green-700">Session Photos ({session.photos.length})</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {uploadedPhotos.map((photo, index) => (
-                  <div key={index} className="relative group">
-                    <div className="w-full h-32 bg-gray-200 rounded-lg flex items-center justify-center">
-                      <span className="text-gray-500">{photo}</span>
+                {session.photos.map((photo) => (
+                  <div key={photo.id} className="relative group">
+                    <img
+                      src={photo.url}
+                      alt={photo.originalName}
+                      className="w-full h-32 object-cover rounded-lg"
+                    />
+                    <Button
+                      size="sm"
+                      variant="destructive"
+                      className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                      onClick={() => removeUploadedPhoto(photo.id)}
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                    <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 text-white p-1 text-xs truncate">
+                      {photo.originalName}
                     </div>
                   </div>
                 ))}
