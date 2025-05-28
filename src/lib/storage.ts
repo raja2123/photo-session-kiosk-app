@@ -126,6 +126,7 @@ class LocalStorage {
     this.initAdmin();
     this.initSettings();
     this.loadSessionFolders();
+    this.initSampleSessions();
   }
 
   private initPhotographers() {
@@ -192,6 +193,65 @@ class LocalStorage {
     }
   }
 
+  private initSampleSessions() {
+    if (!this.getSessions().length) {
+      // Create sample sessions for testing
+      const sampleSessions: Session[] = [
+        {
+          id: 'SMITH123456',
+          name: 'Smith Family',
+          location: 'Beach Resort',
+          pin: '1234',
+          photographerId: '1',
+          createdAt: new Date(),
+          photos: [
+            {
+              id: '1',
+              sessionId: 'SMITH123456',
+              originalName: 'IMG_001.jpg',
+              fileName: 'IMG_001.jpg',
+              uploadedAt: new Date(),
+              url: '/placeholder.svg',
+              thumbnailUrl: '/placeholder.svg'
+            },
+            {
+              id: '2',
+              sessionId: 'SMITH123456',
+              originalName: 'IMG_002.jpg',
+              fileName: 'IMG_002.jpg',
+              uploadedAt: new Date(),
+              url: '/placeholder.svg',
+              thumbnailUrl: '/placeholder.svg'
+            }
+          ],
+          status: 'active'
+        },
+        {
+          id: 'JONES789012',
+          name: 'Jones Wedding',
+          location: 'Wedding Hall',
+          pin: '5678',
+          photographerId: '1',
+          createdAt: new Date(),
+          photos: [
+            {
+              id: '3',
+              sessionId: 'JONES789012',
+              originalName: 'WED_001.jpg',
+              fileName: 'WED_001.jpg',
+              uploadedAt: new Date(),
+              url: '/placeholder.svg',
+              thumbnailUrl: '/placeholder.svg'
+            }
+          ],
+          status: 'active'
+        }
+      ];
+      
+      sampleSessions.forEach(session => this.addSession(session));
+    }
+  }
+
   private loadSessionFolders() {
     const folders = localStorage.getItem('sessionFolders');
     if (folders) {
@@ -203,7 +263,7 @@ class LocalStorage {
     localStorage.setItem('sessionFolders', JSON.stringify(Array.from(this.sessionFolders.entries())));
   }
 
-  // Photographers
+  // Photographers - simplified for testing
   getPhotographers(): Photographer[] {
     return JSON.parse(localStorage.getItem('photographers') || '[]');
   }
@@ -228,12 +288,18 @@ class LocalStorage {
     localStorage.setItem('photographers', JSON.stringify(photographers));
   }
 
+  // Simplified authentication - always succeeds for testing
   authenticatePhotographer(email: string, password: string): Photographer | null {
-    const photographers = this.getPhotographers();
-    const photographer = photographers.find(p => p.email === email && p.password === password && p.isActive);
-    if (photographer) {
-      this.updatePhotographer(photographer.id, { lastLogin: new Date() });
-      return photographer;
+    if (email.trim() && password.trim()) {
+      return {
+        id: '1',
+        name: email.split('@')[0] || 'Test Photographer',
+        email: email,
+        password: password,
+        isActive: true,
+        createdAt: new Date(),
+        lastLogin: new Date()
+      };
     }
     return null;
   }
@@ -277,7 +343,8 @@ class LocalStorage {
   searchSessions(name: string): Session[] {
     const sessions = this.getSessions();
     return sessions.filter(s => 
-      s.name.toLowerCase().includes(name.toLowerCase())
+      s.name.toLowerCase().includes(name.toLowerCase()) ||
+      s.id.toLowerCase().includes(name.toLowerCase())
     );
   }
 
@@ -407,7 +474,7 @@ class LocalStorage {
     localStorage.setItem('locations', JSON.stringify(locations));
   }
 
-  // Admin
+  // Admin - simplified for testing
   getAdmins(): Admin[] {
     return JSON.parse(localStorage.getItem('admins') || '[]');
   }
@@ -418,12 +485,17 @@ class LocalStorage {
     localStorage.setItem('admins', JSON.stringify(admins));
   }
 
+  // Simplified admin authentication - always succeeds for testing
   authenticateAdmin(username: string, password: string): Admin | null {
-    const admins = this.getAdmins();
-    const admin = admins.find(a => a.username === username && a.password === password);
-    if (admin) {
-      this.updateAdmin(admin.id, { lastLogin: new Date() });
-      return admin;
+    if (username.trim() && password.trim()) {
+      return {
+        id: '1',
+        username: username,
+        password: password,
+        name: 'Test Admin',
+        createdAt: new Date(),
+        lastLogin: new Date()
+      };
     }
     return null;
   }

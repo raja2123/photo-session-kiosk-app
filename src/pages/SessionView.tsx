@@ -20,8 +20,8 @@ const SessionView = () => {
     setLoading(true);
 
     try {
-      // Simulate pin verification (demo pin: 1234)
-      if (pin === '1234') {
+      // Allow any 4-digit PIN for testing
+      if (pin.length === 4) {
         toast({
           title: "Access Granted",
           description: "Welcome to the session!",
@@ -30,7 +30,7 @@ const SessionView = () => {
       } else {
         toast({
           title: "Invalid PIN",
-          description: "Please enter the correct 4-digit PIN.",
+          description: "Please enter any 4-digit PIN.",
           variant: "destructive",
         });
       }
@@ -71,11 +71,11 @@ const SessionView = () => {
           <CardContent>
             <form onSubmit={handlePinSubmit} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="pin">Enter 4-Digit PIN</Label>
+                <Label htmlFor="pin">Enter any 4-Digit PIN</Label>
                 <Input
                   id="pin"
                   type="password"
-                  placeholder="Enter PIN"
+                  placeholder="Enter any PIN"
                   value={pin}
                   onChange={(e) => setPin(e.target.value)}
                   maxLength={4}
@@ -95,8 +95,8 @@ const SessionView = () => {
 
             {/* Demo PIN Info */}
             <div className="mt-6 p-3 bg-blue-50 rounded-lg border border-blue-200">
-              <p className="text-sm text-blue-700 font-medium mb-1">Demo PIN:</p>
-              <p className="text-xs text-blue-600">PIN: 1234</p>
+              <p className="text-sm text-blue-700 font-medium mb-1">Test Mode:</p>
+              <p className="text-xs text-blue-600">Enter any 4-digit PIN (e.g., 1234, 5678, etc.)</p>
             </div>
           </CardContent>
         </Card>

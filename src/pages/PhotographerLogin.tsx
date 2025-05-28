@@ -7,7 +7,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { storage } from '@/lib/storage';
 
 const PhotographerLogin = () => {
   const [email, setEmail] = useState('');
@@ -21,20 +20,28 @@ const PhotographerLogin = () => {
     setLoading(true);
 
     try {
-      const photographer = storage.authenticatePhotographer(email, password);
-      
-      if (photographer) {
-        // Store photographer session
+      // Allow any email and password for testing
+      if (email.trim() && password.trim()) {
+        // Store photographer session with entered email
+        const photographer = {
+          id: '1',
+          name: email.split('@')[0] || 'Test Photographer',
+          email: email,
+          isActive: true,
+          createdAt: new Date(),
+          lastLogin: new Date()
+        };
+        
         localStorage.setItem('currentPhotographer', JSON.stringify(photographer));
         toast({
           title: "Login Successful",
-          description: `Welcome back, ${photographer.name}!`,
+          description: `Welcome, ${photographer.name}!`,
         });
         navigate('/photographer/dashboard');
       } else {
         toast({
           title: "Login Failed",
-          description: "Invalid email or password. Please try again.",
+          description: "Please enter any email and password.",
           variant: "destructive",
         });
       }
@@ -79,7 +86,7 @@ const PhotographerLogin = () => {
                 <Input
                   id="email"
                   type="email"
-                  placeholder="john@photo.com"
+                  placeholder="photographer@example.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
@@ -92,7 +99,7 @@ const PhotographerLogin = () => {
                 <Input
                   id="password"
                   type="password"
-                  placeholder="Enter your password"
+                  placeholder="Enter any password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
@@ -109,11 +116,10 @@ const PhotographerLogin = () => {
               </Button>
             </form>
 
-            {/* Demo Credentials */}
+            {/* Test Mode Info */}
             <div className="mt-6 p-3 bg-green-50 rounded-lg border border-green-200">
-              <p className="text-sm text-green-700 font-medium mb-1">Demo Credentials:</p>
-              <p className="text-xs text-green-600">Email: john@photo.com</p>
-              <p className="text-xs text-green-600">Password: password123</p>
+              <p className="text-sm text-green-700 font-medium mb-1">Test Mode:</p>
+              <p className="text-xs text-green-600">Enter any email and password to access photographer dashboard</p>
             </div>
           </CardContent>
         </Card>

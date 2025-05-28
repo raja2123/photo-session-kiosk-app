@@ -20,9 +20,14 @@ const AdminLogin = () => {
     setLoading(true);
 
     try {
-      // Simple admin authentication
-      if (username === 'admin' && password === 'admin123') {
+      // Allow any username and password for testing
+      if (username.trim() && password.trim()) {
         localStorage.setItem('isAdminLoggedIn', 'true');
+        localStorage.setItem('currentAdmin', JSON.stringify({
+          id: '1',
+          username: username,
+          name: 'Test Admin'
+        }));
         toast({
           title: "Login Successful",
           description: "Welcome to the admin dashboard!",
@@ -31,7 +36,7 @@ const AdminLogin = () => {
       } else {
         toast({
           title: "Login Failed",
-          description: "Invalid username or password. Please try again.",
+          description: "Please enter any username and password.",
           variant: "destructive",
         });
       }
@@ -76,7 +81,7 @@ const AdminLogin = () => {
                 <Input
                   id="username"
                   type="text"
-                  placeholder="admin"
+                  placeholder="Enter any username"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   required
@@ -89,7 +94,7 @@ const AdminLogin = () => {
                 <Input
                   id="password"
                   type="password"
-                  placeholder="Enter admin password"
+                  placeholder="Enter any password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
@@ -106,11 +111,10 @@ const AdminLogin = () => {
               </Button>
             </form>
 
-            {/* Demo Credentials */}
+            {/* Test Mode Info */}
             <div className="mt-6 p-3 bg-purple-50 rounded-lg border border-purple-200">
-              <p className="text-sm text-purple-700 font-medium mb-1">Demo Credentials:</p>
-              <p className="text-xs text-purple-600">Username: admin</p>
-              <p className="text-xs text-purple-600">Password: admin123</p>
+              <p className="text-sm text-purple-700 font-medium mb-1">Test Mode:</p>
+              <p className="text-xs text-purple-600">Enter any username and password to access admin panel</p>
             </div>
           </CardContent>
         </Card>
