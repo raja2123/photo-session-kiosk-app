@@ -195,7 +195,7 @@ class LocalStorage {
 
   private initSampleSessions() {
     if (!this.getSessions().length) {
-      // Create sample sessions for testing
+      // Create sample sessions for testing with actual placeholder images
       const sampleSessions: Session[] = [
         {
           id: 'SMITH123456',
@@ -211,8 +211,8 @@ class LocalStorage {
               originalName: 'IMG_001.jpg',
               fileName: 'IMG_001.jpg',
               uploadedAt: new Date(),
-              url: '/placeholder.svg',
-              thumbnailUrl: '/placeholder.svg'
+              url: 'https://images.unsplash.com/photo-1649972904349-6e44c42644a7?w=400&h=400&fit=crop',
+              thumbnailUrl: 'https://images.unsplash.com/photo-1649972904349-6e44c42644a7?w=200&h=200&fit=crop'
             },
             {
               id: '2',
@@ -220,8 +220,35 @@ class LocalStorage {
               originalName: 'IMG_002.jpg',
               fileName: 'IMG_002.jpg',
               uploadedAt: new Date(),
-              url: '/placeholder.svg',
-              thumbnailUrl: '/placeholder.svg'
+              url: 'https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?w=400&h=400&fit=crop',
+              thumbnailUrl: 'https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?w=200&h=200&fit=crop'
+            },
+            {
+              id: '3',
+              sessionId: 'SMITH123456',
+              originalName: 'IMG_003.jpg',
+              fileName: 'IMG_003.jpg',
+              uploadedAt: new Date(),
+              url: 'https://images.unsplash.com/photo-1518770660439-4636190af475?w=400&h=400&fit=crop',
+              thumbnailUrl: 'https://images.unsplash.com/photo-1518770660439-4636190af475?w=200&h=200&fit=crop'
+            },
+            {
+              id: '4',
+              sessionId: 'SMITH123456',
+              originalName: 'IMG_004.jpg',
+              fileName: 'IMG_004.jpg',
+              uploadedAt: new Date(),
+              url: 'https://images.unsplash.com/photo-1461749280684-dccba630e2f6?w=400&h=400&fit=crop',
+              thumbnailUrl: 'https://images.unsplash.com/photo-1461749280684-dccba630e2f6?w=200&h=200&fit=crop'
+            },
+            {
+              id: '5',
+              sessionId: 'SMITH123456',
+              originalName: 'IMG_005.jpg',
+              fileName: 'IMG_005.jpg',
+              uploadedAt: new Date(),
+              url: 'https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?w=400&h=400&fit=crop',
+              thumbnailUrl: 'https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?w=200&h=200&fit=crop'
             }
           ],
           status: 'active'
@@ -235,13 +262,22 @@ class LocalStorage {
           createdAt: new Date(),
           photos: [
             {
-              id: '3',
+              id: '6',
               sessionId: 'JONES789012',
               originalName: 'WED_001.jpg',
               fileName: 'WED_001.jpg',
               uploadedAt: new Date(),
-              url: '/placeholder.svg',
-              thumbnailUrl: '/placeholder.svg'
+              url: 'https://images.unsplash.com/photo-1649972904349-6e44c42644a7?w=400&h=400&fit=crop',
+              thumbnailUrl: 'https://images.unsplash.com/photo-1649972904349-6e44c42644a7?w=200&h=200&fit=crop'
+            },
+            {
+              id: '7',
+              sessionId: 'JONES789012',
+              originalName: 'WED_002.jpg',
+              fileName: 'WED_002.jpg',
+              uploadedAt: new Date(),
+              url: 'https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?w=400&h=400&fit=crop',
+              thumbnailUrl: 'https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?w=200&h=200&fit=crop'
             }
           ],
           status: 'active'
