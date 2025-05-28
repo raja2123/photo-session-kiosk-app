@@ -1,39 +1,41 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, ShoppingCart, Check } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
+import { storage, Session } from '@/lib/storage';
 
 const PhotoSelection = () => {
   const { sessionId } = useParams();
   const navigate = useNavigate();
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
-  const [selectedPhotos, setSelectedPhotos] = useState<number[]>([]);
+  const [selectedPhotos, setSelectedPhotos] = useState<string[]>([]);
+  const [session, setSession] = useState<Session | null>(null);
   const { toast } = useToast();
 
   const plans = [
     { id: 'basic', name: 'Basic', photos: 2, price: 100, color: 'bg-gray-500' },
     { id: 'standard', name: 'Standard', photos: 5, price: 250, color: 'bg-blue-500' },
     { id: 'premium', name: 'Premium', photos: 10, price: 500, color: 'bg-purple-500' },
-    { id: 'unlimited', name: 'Unlimited', photos: 20, price: 1000, color: 'bg-gold-500' },
+    { id: 'unlimited', name: 'Unlimited', photos: 20, price: 1000, color: 'bg-yellow-500' },
   ];
 
-  // Mock photos
-  const photos = Array.from({ length: 12 }, (_, i) => ({
-    id: i + 1,
-    name: `Photo ${i + 1}`,
-    url: `/placeholder.svg?height=200&width=200&text=Photo${i + 1}`
-  }));
+  useEffect(() => {
+    if (sessionId) {
+      const sessionData = storage.getSessionById(sessionId);
+      setSession(sessionData);
+    }
+  }, [sessionId]);
 
   const handlePlanSelect = (planId: string) => {
     setSelectedPlan(planId);
     setSelectedPhotos([]);
   };
 
-  const togglePhotoSelection = (photoId: number) => {
+  const togglePhotoSelection = (photoId: string) => {
     const plan = plans.find(p => p.id === selectedPlan);
     if (!plan) return;
 
@@ -61,11 +63,31 @@ const PhotoSelection = () => {
       });
       return;
     }
+    
+    // Store selected photos in localStorage for the editor
+    localStorage.setItem(`selectedPhotos_${sessionId}`, JSON.stringify({
+      planId: selectedPlan,
+      photoIds: selectedPhotos
+    }));
+    
     navigate(`/user/session/${sessionId}/editor`);
   };
 
+  if (!session) {
+    return (
+      <div className="min-h-screen bg-blue-50 flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-gray-800 mb-2">Session not found</h2>
+          <Link to="/user">
+            <Button>Back to Search</Button>
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 p-6">
+    <div className="min-h-screen bg-blue-50 p-6">
       <div className="max-w-6xl mx-auto">
         {/* Header */}
         <div className="mb-6 flex items-center justify-between">
@@ -84,7 +106,7 @@ const PhotoSelection = () => {
             {plans.map((plan) => (
               <Card
                 key={plan.id}
-                className="cursor-pointer shadow-xl border-0 bg-white/90 backdrop-blur hover:scale-105 transition-transform"
+                className="cursor-pointer shadow-xl border-0 bg-white hover:scale-105 transition-transform"
                 onClick={() => handlePlanSelect(plan.id)}
               >
                 <CardHeader className="text-center">
@@ -127,7 +149,7 @@ const PhotoSelection = () => {
             </div>
 
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-8">
-              {photos.map((photo) => (
+              {session.photos.map((photo) => (
                 <div
                   key={photo.id}
                   className={`relative cursor-pointer rounded-lg overflow-hidden border-4 transition-all ${
@@ -139,7 +161,7 @@ const PhotoSelection = () => {
                 >
                   <img
                     src={photo.url}
-                    alt={photo.name}
+                    alt={photo.originalName}
                     className="w-full h-48 object-cover"
                   />
                   {selectedPhotos.includes(photo.id) && (
@@ -147,6 +169,9 @@ const PhotoSelection = () => {
                       <Check className="w-12 h-12 text-white" />
                     </div>
                   )}
+                  <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 text-white p-2 text-xs">
+                    {photo.originalName}
+                  </div>
                 </div>
               ))}
             </div>
