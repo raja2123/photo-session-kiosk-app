@@ -1,44 +1,109 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { ArrowLeft, ShoppingCart, Download, CreditCard } from 'lucide-react';
+import { ArrowLeft, ShoppingCart, CreditCard } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
+import { storage } from '@/lib/storage';
+import Bill from '@/components/Bill';
 
 const Checkout = () => {
   const { sessionId } = useParams();
   const [processing, setProcessing] = useState(false);
+  const [showBill, setShowBill] = useState(false);
+  const [orderData, setOrderData] = useState<any>(null);
   const { toast } = useToast();
 
-  // Mock data
-  const orderData = {
-    sessionId: sessionId,
-    sessionName: 'Beach Photo Session',
-    location: 'Marina Beach, Chennai',
-    plan: 'Standard',
-    photoCount: 3,
-    price: 250,
-    photos: [
-      { id: 1, name: 'Photo 1', url: '/placeholder.svg?height=150&width=150&text=Photo1' },
-      { id: 2, name: 'Photo 2', url: '/placeholder.svg?height=150&width=150&text=Photo2' },
-      { id: 3, name: 'Photo 3', url: '/placeholder.svg?height=150&width=150&text=Photo3' },
-    ]
-  };
+  useEffect(() => {
+    if (sessionId) {
+      // Get session data
+      const session = storage.getSessionById(sessionId);
+      
+      // Get selected photos
+      const storedSelection = localStorage.getItem(`selectedPhotos_${sessionId}`);
+      
+      // Get edited photos
+      const editedPhotosData = localStorage.getItem(`editedPhotos_${sessionId}`);
+      
+      if (session && storedSelection) {
+        const { photoIds } = JSON.parse(storedSelection);
+        let editedPhotos = {};
+        
+        if (editedPhotosData) {
+          const { editedPhotos: edited } = JSON.parse(editedPhotosData);
+          editedPhotos = edited || {};
+        }
+
+        // Prepare photos with edited versions
+        const selectedPhotos = photoIds.map((photoId: string) => {
+          const photo = session.photos.find((p: any) => p.id === photoId);
+          return {
+            id: photoId,
+            name: photo?.originalName || `Photo ${photoId}`,
+            url: editedPhotos[photoId] || photo?.url || '/placeholder.svg'
+          };
+        });
+
+        setOrderData({
+          sessionId: sessionId,
+          sessionName: session.sessionName,
+          location: session.location,
+          plan: 'Standard',
+          photoCount: photoIds.length,
+          price: photoIds.length * 85, // ₹85 per photo
+          orderDate: new Date().toLocaleDateString(),
+          photos: selectedPhotos
+        });
+      }
+    }
+  }, [sessionId]);
 
   const handleCheckout = async () => {
     setProcessing(true);
     
     // Simulate payment processing
     setTimeout(() => {
-      toast({
-        title: "Order Placed Successfully!",
-        description: "Your photos are being prepared for printing. Invoice generated.",
-      });
       setProcessing(false);
+      setShowBill(true);
     }, 2000);
   };
+
+  const handlePrintBill = () => {
+    // Add order to print queue
+    if (orderData) {
+      const printRequest = {
+        ...orderData,
+        id: Date.now(),
+        customerName: 'Customer',
+        status: 'pending',
+        totalAmount: orderData.price
+      };
+      
+      // Store in localStorage for print queue
+      const existingQueue = JSON.parse(localStorage.getItem('printQueue') || '[]');
+      existingQueue.push(printRequest);
+      localStorage.setItem('printQueue', JSON.stringify(existingQueue));
+      
+      toast({
+        title: "Order Sent to Print Queue",
+        description: "Your photos have been sent to the print queue for processing.",
+      });
+      
+      setShowBill(false);
+    }
+  };
+
+  if (!orderData) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-gray-800 mb-2">Loading checkout...</h2>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 p-6">
@@ -89,18 +154,21 @@ const Checkout = () => {
               <CardHeader>
                 <CardTitle className="text-blue-700">Selected Photos</CardTitle>
                 <CardDescription>
-                  Preview of your edited photos
+                  Preview of your edited photos (showing edited versions)
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-3 gap-4">
-                  {orderData.photos.map((photo) => (
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                  {orderData.photos.map((photo: any, index: number) => (
                     <div key={photo.id} className="relative">
                       <img
                         src={photo.url}
                         alt={photo.name}
-                        className="w-full h-32 object-cover rounded-lg"
+                        className="w-full h-32 object-cover rounded-lg border"
                       />
+                      <div className="absolute top-1 right-1 bg-green-500 text-white text-xs px-1 rounded">
+                        #{index + 1}
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -117,15 +185,15 @@ const Checkout = () => {
               <CardContent>
                 <div className="space-y-4">
                   <div className="flex justify-between">
-                    <span>{orderData.plan} Package</span>
-                    <span>₹{orderData.price}</span>
-                  </div>
-                  <div className="flex justify-between">
                     <span>Photos ({orderData.photoCount})</span>
-                    <span>Included</span>
+                    <span>₹{orderData.photoCount * 85}</span>
                   </div>
                   <div className="flex justify-between">
                     <span>Editing</span>
+                    <span>Included</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Service Tax</span>
                     <span>Included</span>
                   </div>
                   
@@ -159,6 +227,16 @@ const Checkout = () => {
             </Card>
           </div>
         </div>
+
+        {/* Bill Modal */}
+        {showBill && (
+          <Bill
+            isOpen={showBill}
+            onClose={() => setShowBill(false)}
+            orderData={orderData}
+            onPrint={handlePrintBill}
+          />
+        )}
       </div>
     </div>
   );

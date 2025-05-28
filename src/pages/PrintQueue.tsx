@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowLeft, Printer, Eye, X, CheckCircle } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -10,57 +10,72 @@ import { useToast } from '@/hooks/use-toast';
 
 const PrintQueue = () => {
   const { toast } = useToast();
-  
-  const [printRequests, setPrintRequests] = useState([
-    {
-      id: 1,
-      sessionId: 'SESS001',
-      sessionName: 'Beach Photo Session',
-      customerName: 'John Doe',
-      plan: 'Standard',
-      photoCount: 3,
-      totalAmount: 250,
-      status: 'pending',
-      orderDate: '2024-01-15',
-      photos: [
-        { id: 1, name: 'Photo 1', url: '/placeholder.svg?height=200&width=200&text=Photo1' },
-        { id: 2, name: 'Photo 2', url: '/placeholder.svg?height=200&width=200&text=Photo2' },
-        { id: 3, name: 'Photo 3', url: '/placeholder.svg?height=200&width=200&text=Photo3' },
-      ]
-    },
-    {
-      id: 2,
-      sessionId: 'SESS002',
-      sessionName: 'Wedding Photos',
-      customerName: 'Jane Smith',
-      plan: 'Premium',
-      photoCount: 5,
-      totalAmount: 500,
-      status: 'pending',
-      orderDate: '2024-01-14',
-      photos: [
-        { id: 4, name: 'Photo 4', url: '/placeholder.svg?height=200&width=200&text=Photo4' },
-        { id: 5, name: 'Photo 5', url: '/placeholder.svg?height=200&width=200&text=Photo5' },
-      ]
+  const [printRequests, setPrintRequests] = useState<any[]>([]);
+
+  useEffect(() => {
+    // Load print requests from localStorage
+    const storedQueue = localStorage.getItem('printQueue');
+    if (storedQueue) {
+      setPrintRequests(JSON.parse(storedQueue));
     }
-  ]);
+  }, []);
+
+  const updatePrintQueue = (updatedRequests: any[]) => {
+    setPrintRequests(updatedRequests);
+    localStorage.setItem('printQueue', JSON.stringify(updatedRequests));
+  };
 
   const handlePrint = (requestId: number) => {
-    setPrintRequests(prev => 
-      prev.map(req => 
-        req.id === requestId 
-          ? { ...req, status: 'completed' }
-          : req
-      )
+    const updatedRequests = printRequests.map(req => 
+      req.id === requestId 
+        ? { ...req, status: 'completed' }
+        : req
     );
+    updatePrintQueue(updatedRequests);
+    
+    // Simulate printing the photos
+    const request = printRequests.find(req => req.id === requestId);
+    if (request) {
+      // Create a print window for the photos
+      const printWindow = window.open('', '', 'height=800,width=1000');
+      if (printWindow) {
+        printWindow.document.write('<html><head><title>Print Photos</title>');
+        printWindow.document.write('<style>');
+        printWindow.document.write(`
+          body { font-family: Arial, sans-serif; margin: 20px; text-align: center; }
+          .photo-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; page-break-after: always; }
+          .photo-item { text-align: center; }
+          .photo-item img { max-width: 300px; max-height: 400px; object-fit: contain; }
+          .photo-label { margin-top: 10px; font-weight: bold; }
+        `);
+        printWindow.document.write('</style></head><body>');
+        printWindow.document.write(`<h1>Photos for ${request.sessionName}</h1>`);
+        printWindow.document.write('<div class="photo-grid">');
+        
+        request.photos.forEach((photo: any, index: number) => {
+          printWindow.document.write(`
+            <div class="photo-item">
+              <img src="${photo.url}" alt="${photo.name}" />
+              <div class="photo-label">Photo ${index + 1}</div>
+            </div>
+          `);
+        });
+        
+        printWindow.document.write('</div></body></html>');
+        printWindow.document.close();
+        printWindow.print();
+      }
+    }
+    
     toast({
       title: "Photos Printed Successfully",
-      description: "The order has been marked as completed.",
+      description: "The order has been marked as completed and photos have been printed.",
     });
   };
 
   const handleCancel = (requestId: number) => {
-    setPrintRequests(prev => prev.filter(req => req.id !== requestId));
+    const updatedRequests = printRequests.filter(req => req.id !== requestId);
+    updatePrintQueue(updatedRequests);
     toast({
       title: "Order Cancelled",
       description: "The print request has been cancelled and removed.",
@@ -117,7 +132,7 @@ const PrintQueue = () => {
                 <div>
                   <p className="text-sm text-gray-600">Total Revenue</p>
                   <p className="text-3xl font-bold text-blue-600">
-                    ₹{completedRequests.reduce((sum, req) => sum + req.totalAmount, 0)}
+                    ₹{completedRequests.reduce((sum, req) => sum + (req.totalAmount || req.price || 0), 0)}
                   </p>
                 </div>
                 <div className="text-2xl">💰</div>
@@ -148,14 +163,14 @@ const PrintQueue = () => {
                       <div>
                         <h3 className="text-lg font-semibold">{request.sessionName}</h3>
                         <p className="text-gray-600">Session ID: {request.sessionId}</p>
-                        <p className="text-gray-600">Customer: {request.customerName}</p>
+                        <p className="text-gray-600">Customer: {request.customerName || 'Customer'}</p>
                         <p className="text-gray-600">Order Date: {request.orderDate}</p>
                       </div>
                       <div className="text-right">
                         <Badge variant="outline" className="mb-2">
                           {request.plan} Plan
                         </Badge>
-                        <p className="text-lg font-bold">₹{request.totalAmount}</p>
+                        <p className="text-lg font-bold">₹{request.totalAmount || request.price}</p>
                         <p className="text-sm text-gray-500">{request.photoCount} photos</p>
                       </div>
                     </div>
@@ -175,8 +190,8 @@ const PrintQueue = () => {
                               Preview of edited photos ready for printing
                             </DialogDescription>
                           </DialogHeader>
-                          <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-4">
-                            {request.photos.map((photo) => (
+                          <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-4 max-h-96 overflow-y-auto">
+                            {request.photos.map((photo: any) => (
                               <div key={photo.id} className="aspect-square">
                                 <img
                                   src={photo.url}
@@ -234,13 +249,13 @@ const PrintQueue = () => {
                       <div>
                         <h3 className="text-lg font-semibold">{request.sessionName}</h3>
                         <p className="text-gray-600">Session ID: {request.sessionId}</p>
-                        <p className="text-gray-600">Customer: {request.customerName}</p>
+                        <p className="text-gray-600">Customer: {request.customerName || 'Customer'}</p>
                       </div>
                       <div className="text-right">
                         <Badge variant="default" className="bg-green-600 mb-2">
                           Completed
                         </Badge>
-                        <p className="text-lg font-bold">₹{request.totalAmount}</p>
+                        <p className="text-lg font-bold">₹{request.totalAmount || request.price}</p>
                         <p className="text-sm text-gray-500">{request.photoCount} photos</p>
                       </div>
                     </div>

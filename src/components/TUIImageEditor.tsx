@@ -9,11 +9,6 @@ interface TUIImageEditorProps {
   onClose: () => void;
 }
 
-const icona = {
-  'menu.normalIcon.path': 'M-7,0 L-3,0 L-3,4 L-7,4 L-7,0 M-5,6 L-1,6 L-1,10 L-5,10 L-5,6 M1,0 L5,0 L5,4 L1,4 L1,0 M3,6 L7,6 L7,10 L3,10 L3,6',
-  'menu.activeIcon.path': 'M-7,0 L-3,0 L-3,4 L-7,4 L-7,0 M-5,6 L-1,6 L-1,10 L-5,10 L-5,6 M1,0 L5,0 L5,4 L1,4 L1,0 M3,6 L7,6 L7,10 L3,10 L3,6'
-};
-
 const TUIImageEditor: React.FC<TUIImageEditorProps> = ({ imageUrl, onSave, onClose }) => {
   const editorRef = useRef<any>(null);
 
@@ -24,6 +19,9 @@ const TUIImageEditor: React.FC<TUIImageEditorProps> = ({ imageUrl, onSave, onClo
       onSave(canvas);
     }
   };
+
+  // Calculate proper height for the editor
+  const editorHeight = window.innerHeight - 200; // Account for header and buttons
 
   const editorOptions = {
     includeUI: {
@@ -88,18 +86,18 @@ const TUIImageEditor: React.FC<TUIImageEditorProps> = ({ imageUrl, onSave, onClo
       initMenu: 'filter',
       uiSize: {
         width: '100%',
-        height: '600px'
+        height: `${editorHeight}px`
       },
       menuBarPosition: 'bottom'
     },
-    cssMaxWidth: 1000,
-    cssMaxHeight: 600,
+    cssMaxWidth: '100%',
+    cssMaxHeight: editorHeight,
     usageStatistics: false
   };
 
   return (
-    <div className="tui-image-editor-container">
-      <div className="flex justify-between items-center mb-4 p-4 bg-white border-b">
+    <div className="tui-image-editor-container h-screen flex flex-col">
+      <div className="flex justify-between items-center p-4 bg-white border-b">
         <h2 className="text-xl font-bold text-gray-800">Edit Photo</h2>
         <div className="space-x-2">
           <button
@@ -117,7 +115,7 @@ const TUIImageEditor: React.FC<TUIImageEditorProps> = ({ imageUrl, onSave, onClo
         </div>
       </div>
       
-      <div className="editor-wrapper">
+      <div className="editor-wrapper flex-1">
         <ImageEditor
           ref={editorRef}
           {...editorOptions}
@@ -128,17 +126,21 @@ const TUIImageEditor: React.FC<TUIImageEditorProps> = ({ imageUrl, onSave, onClo
         __html: `
           .tui-image-editor-container {
             background: white;
-            border-radius: 8px;
             overflow: hidden;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
           }
           
           .editor-wrapper {
             background: #f8f9fa;
+            height: calc(100vh - 80px);
           }
           
           .tui-image-editor-main {
             background-color: #f8f9fa !important;
+            height: 100% !important;
+          }
+          
+          .tui-image-editor-canvas-container {
+            height: calc(100% - 50px) !important;
           }
           
           .tui-image-editor-menu {
