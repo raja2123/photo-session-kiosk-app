@@ -124,36 +124,38 @@ const TUIImageEditor: React.FC<TUIImageEditorProps> = ({ imageUrl, onSave, onClo
         />
       </div>
       
-      <style jsx>{`
-        .tui-image-editor-container {
-          background: white;
-          border-radius: 8px;
-          overflow: hidden;
-          box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-        }
-        
-        .editor-wrapper {
-          background: #f8f9fa;
-        }
-        
-        :global(.tui-image-editor-main) {
-          background-color: #f8f9fa !important;
-        }
-        
-        :global(.tui-image-editor-menu) {
-          background-color: #ffffff !important;
-          border-top: 1px solid #e5e7eb !important;
-        }
-        
-        :global(.tui-image-editor-submenu) {
-          background-color: #ffffff !important;
-          border-right: 1px solid #e5e7eb !important;
-        }
-        
-        :global(.tui-image-editor-header) {
-          display: none !important;
-        }
-      `}</style>
+      <style dangerouslySetInnerHTML={{
+        __html: `
+          .tui-image-editor-container {
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+          }
+          
+          .editor-wrapper {
+            background: #f8f9fa;
+          }
+          
+          .tui-image-editor-main {
+            background-color: #f8f9fa !important;
+          }
+          
+          .tui-image-editor-menu {
+            background-color: #ffffff !important;
+            border-top: 1px solid #e5e7eb !important;
+          }
+          
+          .tui-image-editor-submenu {
+            background-color: #ffffff !important;
+            border-right: 1px solid #e5e7eb !important;
+          }
+          
+          .tui-image-editor-header {
+            display: none !important;
+          }
+        `
+      }} />
     </div>
   );
 };
