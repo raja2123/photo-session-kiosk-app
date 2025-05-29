@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowLeft, Printer, Eye, X, CheckCircle } from 'lucide-react';
@@ -33,35 +32,97 @@ const PrintQueue = () => {
     );
     updatePrintQueue(updatedRequests);
     
-    // Simulate printing the photos
+    // Simulate printing the photos - each photo on separate page
     const request = printRequests.find(req => req.id === requestId);
     if (request) {
-      // Create a print window for the photos
       const printWindow = window.open('', '', 'height=800,width=1000');
       if (printWindow) {
         printWindow.document.write('<html><head><title>Print Photos</title>');
         printWindow.document.write('<style>');
         printWindow.document.write(`
-          body { font-family: Arial, sans-serif; margin: 20px; text-align: center; }
-          .photo-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; page-break-after: always; }
-          .photo-item { text-align: center; }
-          .photo-item img { max-width: 300px; max-height: 400px; object-fit: contain; }
-          .photo-label { margin-top: 10px; font-weight: bold; }
+          body { 
+            font-family: Arial, sans-serif; 
+            margin: 0; 
+            padding: 0;
+            text-align: center; 
+          }
+          .page {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            page-break-after: always;
+            padding: 20px;
+            box-sizing: border-box;
+          }
+          .page:last-child {
+            page-break-after: avoid;
+          }
+          .photo-container {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 80%;
+            width: 100%;
+          }
+          .photo-container img {
+            max-width: 90%;
+            max-height: 90%;
+            object-fit: contain;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+          }
+          .photo-info {
+            margin-top: 20px;
+            text-align: center;
+          }
+          .session-title {
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 10px;
+          }
+          .photo-label {
+            font-size: 18px;
+            font-weight: 600;
+            color: #666;
+            margin-bottom: 5px;
+          }
+          .print-date {
+            font-size: 14px;
+            color: #888;
+          }
+          @media print {
+            .page {
+              page-break-after: always;
+            }
+            .page:last-child {
+              page-break-after: avoid;
+            }
+          }
         `);
         printWindow.document.write('</style></head><body>');
-        printWindow.document.write(`<h1>Photos for ${request.sessionName}</h1>`);
-        printWindow.document.write('<div class="photo-grid">');
         
         request.photos.forEach((photo: any, index: number) => {
           printWindow.document.write(`
-            <div class="photo-item">
-              <img src="${photo.url}" alt="${photo.name}" />
-              <div class="photo-label">Photo ${index + 1}</div>
+            <div class="page">
+              <div class="photo-container">
+                <img src="${photo.url}" alt="${photo.name}" />
+              </div>
+              <div class="photo-info">
+                <div class="session-title">${request.sessionName}</div>
+                <div class="photo-label">Photo ${index + 1} of ${request.photos.length}</div>
+                <div class="print-date">Printed on ${new Date().toLocaleDateString()}</div>
+              </div>
             </div>
           `);
         });
         
-        printWindow.document.write('</div></body></html>');
+        printWindow.document.write('</body></html>');
         printWindow.document.close();
         printWindow.print();
       }
@@ -69,7 +130,7 @@ const PrintQueue = () => {
     
     toast({
       title: "Photos Printed Successfully",
-      description: "The order has been marked as completed and photos have been printed.",
+      description: "Each photo has been printed on a separate page.",
     });
   };
 
@@ -187,7 +248,7 @@ const PrintQueue = () => {
                           <DialogHeader>
                             <DialogTitle>Photo Preview - {request.sessionName}</DialogTitle>
                             <DialogDescription>
-                              Preview of edited photos ready for printing
+                              Preview of edited photos ready for printing (each will print on separate page)
                             </DialogDescription>
                           </DialogHeader>
                           <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-4 max-h-96 overflow-y-auto">
