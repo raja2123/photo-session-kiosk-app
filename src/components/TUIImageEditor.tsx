@@ -35,8 +35,9 @@ const TUIImageEditor: React.FC<TUIImageEditorProps> = ({ imageUrl, onSave, onClo
     }
   };
 
-  // Calculate proper dimensions
-  const editorHeight = window.innerHeight - 80; // Account for header
+  // Calculate proper dimensions to fill the screen
+  const headerHeight = 80; // Height of our custom header
+  const editorHeight = window.innerHeight - headerHeight; // Full screen minus header
   const editorWidth = window.innerWidth;
 
   const editorOptions = {
@@ -115,9 +116,9 @@ const TUIImageEditor: React.FC<TUIImageEditorProps> = ({ imageUrl, onSave, onClo
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-white overflow-hidden">
+    <div className="fixed inset-0 z-50 bg-white overflow-hidden" style={{ height: '100vh' }}>
       {/* Custom Header */}
-      <div className="flex items-center justify-between px-6 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg">
+      <div className="flex items-center justify-between px-6 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg" style={{ height: `${headerHeight}px` }}>
         <div className="flex items-center space-x-3">
           <Palette className="w-6 h-6" />
           <h1 className="text-xl font-bold">Photo Editor</h1>
@@ -151,8 +152,8 @@ const TUIImageEditor: React.FC<TUIImageEditorProps> = ({ imageUrl, onSave, onClo
         </div>
       )}
 
-      {/* Editor Container */}
-      <div className="editor-container" style={{ height: `${editorHeight}px` }}>
+      {/* Editor Container - Takes full remaining height */}
+      <div className="editor-container" style={{ height: `${editorHeight}px`, width: '100%' }}>
         <ImageEditor
           ref={editorRef}
           {...editorOptions}
@@ -166,6 +167,7 @@ const TUIImageEditor: React.FC<TUIImageEditorProps> = ({ imageUrl, onSave, onClo
           .editor-container {
             background: #f8fafc;
             width: 100%;
+            height: 100%;
             overflow: hidden;
           }
           
@@ -173,13 +175,15 @@ const TUIImageEditor: React.FC<TUIImageEditorProps> = ({ imageUrl, onSave, onClo
           .tui-image-editor-main {
             background-color: #f8fafc !important;
             height: 100% !important;
+            width: 100% !important;
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif !important;
           }
           
           /* Canvas container - make it fill available space */
           .tui-image-editor-canvas-container {
             background-color: #ffffff !important;
-            height: calc(100% - 60px) !important;
+            height: calc(100% - 70px) !important;
+            width: calc(100% - 20px) !important;
             border: 2px solid #e2e8f0 !important;
             border-radius: 12px !important;
             margin: 10px !important;
@@ -189,6 +193,8 @@ const TUIImageEditor: React.FC<TUIImageEditorProps> = ({ imageUrl, onSave, onClo
           /* Canvas styling */
           .lower-canvas, .upper-canvas {
             border-radius: 8px !important;
+            max-height: 100% !important;
+            max-width: 100% !important;
           }
           
           /* Menu bar styling */
@@ -198,6 +204,12 @@ const TUIImageEditor: React.FC<TUIImageEditorProps> = ({ imageUrl, onSave, onClo
             border-top: 2px solid #e2e8f0 !important;
             padding: 8px 16px !important;
             box-shadow: 0 -4px 6px -1px rgba(0, 0, 0, 0.1) !important;
+            height: 60px !important;
+            position: absolute !important;
+            bottom: 0 !important;
+            left: 0 !important;
+            right: 0 !important;
+            width: 100% !important;
           }
           
           /* Menu items */
@@ -224,6 +236,8 @@ const TUIImageEditor: React.FC<TUIImageEditorProps> = ({ imageUrl, onSave, onClo
             border-radius: 12px !important;
             box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05) !important;
             margin: 10px !important;
+            max-height: calc(100vh - 200px) !important;
+            overflow-y: auto !important;
           }
           
           /* Submenu items */
@@ -329,6 +343,12 @@ const TUIImageEditor: React.FC<TUIImageEditorProps> = ({ imageUrl, onSave, onClo
           
           .tui-image-editor-submenu::-webkit-scrollbar-thumb:hover {
             background: #94a3b8 !important;
+          }
+
+          /* Ensure main wrapper takes full height */
+          .tui-image-editor-wrap {
+            height: 100% !important;
+            width: 100% !important;
           }
         `
       }} />
