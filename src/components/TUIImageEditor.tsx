@@ -2,7 +2,7 @@
 import React, { useRef, useEffect, useState } from 'react';
 import ImageEditor from '@toast-ui/react-image-editor';
 import 'tui-image-editor/dist/tui-image-editor.css';
-import { Save, X, Palette, Crop, RotateCw, Type, Square, Brush, Eraser, Filter, FlipHorizontal, MousePointer, Shapes, Image as ImageIcon } from 'lucide-react';
+import { Save, X, Palette, Crop, RotateCw, Type, Brush, Eraser, Filter, FlipHorizontal, Shapes, ChevronLeft } from 'lucide-react';
 
 interface TUIImageEditorProps {
   imageUrl: string;
@@ -14,6 +14,7 @@ const TUIImageEditor: React.FC<TUIImageEditorProps> = ({ imageUrl, onSave, onClo
   const editorRef = useRef<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [activeMenu, setActiveMenu] = useState('crop');
+  const [showSubOptions, setShowSubOptions] = useState(false);
   const [editorInstance, setEditorInstance] = useState<any>(null);
 
   useEffect(() => {
@@ -24,7 +25,7 @@ const TUIImageEditor: React.FC<TUIImageEditorProps> = ({ imageUrl, onSave, onClo
         setEditorInstance(instance);
         console.log('Editor instance ready:', instance);
       }
-    }, 2000); // Increased delay to ensure editor is fully loaded
+    }, 2000);
     return () => clearTimeout(timer);
   }, []);
 
@@ -42,20 +43,20 @@ const TUIImageEditor: React.FC<TUIImageEditorProps> = ({ imageUrl, onSave, onClo
   const handleMenuClick = (menuType: string) => {
     console.log('Menu clicked:', menuType);
     setActiveMenu(menuType);
+    setShowSubOptions(['filter', 'shape', 'text', 'draw'].includes(menuType));
     
     if (editorInstance) {
       try {
-        // Clear any active selections first
-        editorInstance.clearUndoStack();
-        editorInstance.clearRedoStack();
-        
-        // Activate the selected tool based on menu type
         switch (menuType) {
           case 'crop':
             editorInstance.startDrawingMode('CROPPER');
             break;
           case 'draw':
             editorInstance.startDrawingMode('FREE_DRAWING');
+            editorInstance.setBrush({
+              width: 5,
+              color: '#ff0000'
+            });
             break;
           case 'shape':
             editorInstance.startDrawingMode('SHAPE');
@@ -69,17 +70,6 @@ const TUIImageEditor: React.FC<TUIImageEditorProps> = ({ imageUrl, onSave, onClo
           case 'flip':
             editorInstance.flipX();
             break;
-          case 'filter':
-            // Apply a sample filter
-            editorInstance.applyFilter('blur', { blur: 0.1 });
-            break;
-          case 'mask':
-            editorInstance.startDrawingMode('FREE_DRAWING');
-            editorInstance.setBrush({
-              width: 20,
-              color: 'rgba(255,255,255,0.8)'
-            });
-            break;
           default:
             editorInstance.stopDrawingMode();
             break;
@@ -88,13 +78,88 @@ const TUIImageEditor: React.FC<TUIImageEditorProps> = ({ imageUrl, onSave, onClo
       } catch (error) {
         console.error('Error activating tool:', error);
       }
-    } else {
-      console.log('Editor instance not ready yet');
+    }
+  };
+
+  const handleSubOptionClick = (option: string, value: any) => {
+    if (!editorInstance) return;
+
+    try {
+      switch (activeMenu) {
+        case 'filter':
+          switch (option) {
+            case 'blur':
+              editorInstance.applyFilter('blur', { blur: 0.1 });
+              break;
+            case 'sharpen':
+              editorInstance.applyFilter('sharpen');
+              break;
+            case 'vintage':
+              editorInstance.applyFilter('vintage');
+              break;
+            case 'sepia':
+              editorInstance.applyFilter('sepia');
+              break;
+            case 'grayscale':
+              editorInstance.applyFilter('grayscale');
+              break;
+            case 'invert':
+              editorInstance.applyFilter('invert');
+              break;
+            case 'brightness':
+              editorInstance.applyFilter('brightness', { brightness: value });
+              break;
+            case 'contrast':
+              editorInstance.applyFilter('contrast', { contrast: value });
+              break;
+          }
+          break;
+        case 'shape':
+          editorInstance.startDrawingMode('SHAPE');
+          switch (option) {
+            case 'rect':
+              editorInstance.setDrawingShape('rect');
+              break;
+            case 'circle':
+              editorInstance.setDrawingShape('circle');
+              break;
+            case 'triangle':
+              editorInstance.setDrawingShape('triangle');
+              break;
+          }
+          break;
+        case 'text':
+          editorInstance.startDrawingMode('TEXT');
+          if (option === 'size') {
+            editorInstance.changeTextStyle({
+              fontSize: value
+            });
+          } else if (option === 'color') {
+            editorInstance.changeTextStyle({
+              fill: value
+            });
+          }
+          break;
+        case 'draw':
+          editorInstance.startDrawingMode('FREE_DRAWING');
+          if (option === 'width') {
+            editorInstance.setBrush({
+              width: value
+            });
+          } else if (option === 'color') {
+            editorInstance.setBrush({
+              color: value
+            });
+          }
+          break;
+      }
+    } catch (error) {
+      console.error('Error applying sub-option:', error);
     }
   };
 
   const headerHeight = 80;
-  const sidebarWidth = 280;
+  const sidebarWidth = 320;
   const editorHeight = window.innerHeight - headerHeight;
   const editorWidth = window.innerWidth - sidebarWidth;
 
@@ -104,11 +169,27 @@ const TUIImageEditor: React.FC<TUIImageEditorProps> = ({ imageUrl, onSave, onClo
     { id: 'rotate', label: 'Rotate', icon: RotateCw, color: 'text-purple-600' },
     { id: 'draw', label: 'Draw', icon: Brush, color: 'text-red-600' },
     { id: 'shape', label: 'Shapes', icon: Shapes, color: 'text-orange-600' },
-    { id: 'icon', label: 'Icons', icon: ImageIcon, color: 'text-pink-600' },
     { id: 'text', label: 'Text', icon: Type, color: 'text-indigo-600' },
-    { id: 'mask', label: 'Mask', icon: Eraser, color: 'text-gray-600' },
     { id: 'filter', label: 'Filter', icon: Filter, color: 'text-yellow-600' }
   ];
+
+  const filterOptions = [
+    { id: 'blur', label: 'Blur' },
+    { id: 'sharpen', label: 'Sharpen' },
+    { id: 'vintage', label: 'Vintage' },
+    { id: 'sepia', label: 'Sepia' },
+    { id: 'grayscale', label: 'Grayscale' },
+    { id: 'invert', label: 'Invert' }
+  ];
+
+  const shapeOptions = [
+    { id: 'rect', label: 'Rectangle' },
+    { id: 'circle', label: 'Circle' },
+    { id: 'triangle', label: 'Triangle' }
+  ];
+
+  const drawColors = ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff', '#00ffff', '#000000', '#ffffff'];
+  const textColors = ['#000000', '#ffffff', '#ff0000', '#00ff00', '#0000ff', '#ffff00'];
 
   const editorOptions = {
     includeUI: {
@@ -126,13 +207,11 @@ const TUIImageEditor: React.FC<TUIImageEditorProps> = ({ imageUrl, onSave, onClo
         'header.display': 'none',
         'menu.display': 'none'
       },
-      menu: ['crop', 'flip', 'rotate', 'draw', 'shape', 'icon', 'text', 'mask', 'filter'],
-      initMenu: 'crop',
+      menu: [],
       uiSize: {
         width: `${editorWidth}px`,
         height: `${editorHeight}px`
-      },
-      menuBarPosition: 'bottom'
+      }
     },
     cssMaxWidth: editorWidth,
     cssMaxHeight: editorHeight,
@@ -188,48 +267,168 @@ const TUIImageEditor: React.FC<TUIImageEditorProps> = ({ imageUrl, onSave, onClo
         </div>
 
         {/* Right Sidebar */}
-        <div className="bg-white border-l border-gray-200 shadow-lg" style={{ width: `${sidebarWidth}px` }}>
+        <div className="bg-white border-l border-gray-200 shadow-lg overflow-y-auto" style={{ width: `${sidebarWidth}px` }}>
           <div className="p-4">
-            <h3 className="text-lg font-semibold text-gray-800 mb-4">Editing Tools</h3>
-            
-            <div className="space-y-2">
-              {menuItems.map((item) => (
-                <button
-                  key={item.id}
-                  onClick={() => handleMenuClick(item.id)}
-                  className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200 ${
-                    activeMenu === item.id
-                      ? 'bg-blue-100 border-2 border-blue-500 text-blue-700'
-                      : 'bg-gray-50 hover:bg-gray-100 border-2 border-transparent'
-                  }`}
-                >
-                  <item.icon className={`w-5 h-5 ${activeMenu === item.id ? 'text-blue-600' : item.color}`} />
-                  <span className="font-medium">{item.label}</span>
-                </button>
-              ))}
-            </div>
+            {!showSubOptions ? (
+              <>
+                <h3 className="text-lg font-semibold text-gray-800 mb-4">Editing Tools</h3>
+                
+                <div className="grid grid-cols-2 gap-3">
+                  {menuItems.map((item) => (
+                    <button
+                      key={item.id}
+                      onClick={() => handleMenuClick(item.id)}
+                      className={`aspect-square flex flex-col items-center justify-center p-4 rounded-lg transition-all duration-200 ${
+                        activeMenu === item.id && !showSubOptions
+                          ? 'bg-blue-100 border-2 border-blue-500 text-blue-700'
+                          : 'bg-gray-50 hover:bg-gray-100 border-2 border-transparent'
+                      }`}
+                    >
+                      <item.icon className={`w-6 h-6 mb-2 ${activeMenu === item.id && !showSubOptions ? 'text-blue-600' : item.color}`} />
+                      <span className="text-sm font-medium text-center">{item.label}</span>
+                    </button>
+                  ))}
+                </div>
 
-            <div className="mt-6 p-4 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg">
-              <h4 className="text-sm font-semibold text-gray-700 mb-2">Quick Tips</h4>
-              <p className="text-xs text-gray-600">
-                Select a tool from above to start editing your photo. Use the canvas to make adjustments.
-              </p>
-            </div>
+                <div className="mt-6 p-4 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg">
+                  <h4 className="text-sm font-semibold text-gray-700 mb-2">Quick Tips</h4>
+                  <p className="text-xs text-gray-600">
+                    Select a tool from above to start editing your photo. Use the canvas to make adjustments.
+                  </p>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="flex items-center mb-4">
+                  <button
+                    onClick={() => setShowSubOptions(false)}
+                    className="p-2 hover:bg-gray-100 rounded-lg mr-2"
+                  >
+                    <ChevronLeft className="w-5 h-5" />
+                  </button>
+                  <h3 className="text-lg font-semibold text-gray-800 capitalize">{activeMenu} Options</h3>
+                </div>
 
-            {/* Tool Instructions */}
-            <div className="mt-4 p-4 bg-gray-50 rounded-lg">
-              <h4 className="text-sm font-semibold text-gray-700 mb-2">Tool Guide</h4>
-              <div className="text-xs text-gray-600 space-y-1">
-                {activeMenu === 'crop' && <p>Click and drag on the image to select crop area</p>}
-                {activeMenu === 'draw' && <p>Click and drag to draw freely on the image</p>}
-                {activeMenu === 'text' && <p>Click on the image to add text</p>}
-                {activeMenu === 'shape' && <p>Select from various shapes to add</p>}
-                {activeMenu === 'rotate' && <p>Click to rotate image 90 degrees</p>}
-                {activeMenu === 'flip' && <p>Click to flip image horizontally</p>}
-                {activeMenu === 'filter' && <p>Apply various filters to enhance your image</p>}
-                {activeMenu === 'mask' && <p>Use eraser tool to mask parts of the image</p>}
-              </div>
-            </div>
+                {/* Filter Sub-options */}
+                {activeMenu === 'filter' && (
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-2 gap-2">
+                      {filterOptions.map((filter) => (
+                        <button
+                          key={filter.id}
+                          onClick={() => handleSubOptionClick(filter.id, null)}
+                          className="p-3 bg-gray-50 hover:bg-gray-100 rounded-lg text-sm font-medium transition-colors"
+                        >
+                          {filter.label}
+                        </button>
+                      ))}
+                    </div>
+                    
+                    <div className="space-y-3">
+                      <div>
+                        <label className="block text-sm font-medium mb-2">Brightness</label>
+                        <input
+                          type="range"
+                          min="-1"
+                          max="1"
+                          step="0.1"
+                          defaultValue="0"
+                          onChange={(e) => handleSubOptionClick('brightness', parseFloat(e.target.value))}
+                          className="w-full"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium mb-2">Contrast</label>
+                        <input
+                          type="range"
+                          min="-100"
+                          max="100"
+                          step="1"
+                          defaultValue="0"
+                          onChange={(e) => handleSubOptionClick('contrast', parseInt(e.target.value))}
+                          className="w-full"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Shape Sub-options */}
+                {activeMenu === 'shape' && (
+                  <div className="grid grid-cols-2 gap-2">
+                    {shapeOptions.map((shape) => (
+                      <button
+                        key={shape.id}
+                        onClick={() => handleSubOptionClick(shape.id, null)}
+                        className="p-3 bg-gray-50 hover:bg-gray-100 rounded-lg text-sm font-medium transition-colors"
+                      >
+                        {shape.label}
+                      </button>
+                    ))}
+                  </div>
+                )}
+
+                {/* Draw Sub-options */}
+                {activeMenu === 'draw' && (
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium mb-2">Brush Size</label>
+                      <input
+                        type="range"
+                        min="1"
+                        max="30"
+                        defaultValue="5"
+                        onChange={(e) => handleSubOptionClick('width', parseInt(e.target.value))}
+                        className="w-full"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-2">Color</label>
+                      <div className="grid grid-cols-4 gap-2">
+                        {drawColors.map((color) => (
+                          <button
+                            key={color}
+                            onClick={() => handleSubOptionClick('color', color)}
+                            className="w-8 h-8 rounded border-2 border-gray-300"
+                            style={{ backgroundColor: color }}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Text Sub-options */}
+                {activeMenu === 'text' && (
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium mb-2">Font Size</label>
+                      <input
+                        type="range"
+                        min="12"
+                        max="72"
+                        defaultValue="24"
+                        onChange={(e) => handleSubOptionClick('size', parseInt(e.target.value))}
+                        className="w-full"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-2">Text Color</label>
+                      <div className="grid grid-cols-3 gap-2">
+                        {textColors.map((color) => (
+                          <button
+                            key={color}
+                            onClick={() => handleSubOptionClick('color', color)}
+                            className="w-8 h-8 rounded border-2 border-gray-300"
+                            style={{ backgroundColor: color }}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
           </div>
         </div>
       </div>
