@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { ArrowLeft, ShoppingCart, CreditCard } from 'lucide-react';
@@ -48,7 +47,7 @@ const Checkout = () => {
 
         setOrderData({
           sessionId: sessionId,
-          sessionName: session.sessionName,
+          sessionName: session.name, // Fixed: using session.name instead of session.sessionName
           location: session.location,
           plan: 'Standard',
           photoCount: photoIds.length,
