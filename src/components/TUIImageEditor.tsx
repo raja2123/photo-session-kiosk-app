@@ -1,3 +1,4 @@
+
 import React, { useRef, useEffect, useState } from 'react';
 import ImageEditor from '@toast-ui/react-image-editor';
 import 'tui-image-editor/dist/tui-image-editor.css';
@@ -13,19 +14,24 @@ const TUIImageEditor: React.FC<TUIImageEditorProps> = ({ imageUrl, onSave, onClo
   const editorRef = useRef<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [activeMenu, setActiveMenu] = useState('crop');
+  const [editorInstance, setEditorInstance] = useState<any>(null);
 
   useEffect(() => {
     const timer = setTimeout(() => {
       setIsLoading(false);
-    }, 1000);
+      if (editorRef.current) {
+        const instance = editorRef.current.getInstance();
+        setEditorInstance(instance);
+        console.log('Editor instance ready:', instance);
+      }
+    }, 2000); // Increased delay to ensure editor is fully loaded
     return () => clearTimeout(timer);
   }, []);
 
   const handleSave = () => {
-    if (editorRef.current) {
+    if (editorInstance) {
       try {
-        const imageEditor = editorRef.current.getInstance();
-        const canvas = imageEditor.toDataURL();
+        const canvas = editorInstance.toDataURL();
         onSave(canvas);
       } catch (error) {
         console.error('Error saving image:', error);
@@ -34,11 +40,56 @@ const TUIImageEditor: React.FC<TUIImageEditorProps> = ({ imageUrl, onSave, onClo
   };
 
   const handleMenuClick = (menuType: string) => {
+    console.log('Menu clicked:', menuType);
     setActiveMenu(menuType);
-    if (editorRef.current) {
-      const imageEditor = editorRef.current.getInstance();
-      imageEditor.changeSelectableAll(false);
-      imageEditor.ui.changeMenu(menuType);
+    
+    if (editorInstance) {
+      try {
+        // Clear any active selections first
+        editorInstance.clearUndoStack();
+        editorInstance.clearRedoStack();
+        
+        // Activate the selected tool based on menu type
+        switch (menuType) {
+          case 'crop':
+            editorInstance.startDrawingMode('CROPPER');
+            break;
+          case 'draw':
+            editorInstance.startDrawingMode('FREE_DRAWING');
+            break;
+          case 'shape':
+            editorInstance.startDrawingMode('SHAPE');
+            break;
+          case 'text':
+            editorInstance.startDrawingMode('TEXT');
+            break;
+          case 'rotate':
+            editorInstance.rotate(90);
+            break;
+          case 'flip':
+            editorInstance.flipX();
+            break;
+          case 'filter':
+            // Apply a sample filter
+            editorInstance.applyFilter('blur', { blur: 0.1 });
+            break;
+          case 'mask':
+            editorInstance.startDrawingMode('FREE_DRAWING');
+            editorInstance.setBrush({
+              width: 20,
+              color: 'rgba(255,255,255,0.8)'
+            });
+            break;
+          default:
+            editorInstance.stopDrawingMode();
+            break;
+        }
+        console.log('Tool activated:', menuType);
+      } catch (error) {
+        console.error('Error activating tool:', error);
+      }
+    } else {
+      console.log('Editor instance not ready yet');
     }
   };
 
@@ -75,7 +126,7 @@ const TUIImageEditor: React.FC<TUIImageEditorProps> = ({ imageUrl, onSave, onClo
         'header.display': 'none',
         'menu.display': 'none'
       },
-      menu: [],
+      menu: ['crop', 'flip', 'rotate', 'draw', 'shape', 'icon', 'text', 'mask', 'filter'],
       initMenu: 'crop',
       uiSize: {
         width: `${editorWidth}px`,
@@ -164,6 +215,21 @@ const TUIImageEditor: React.FC<TUIImageEditorProps> = ({ imageUrl, onSave, onClo
                 Select a tool from above to start editing your photo. Use the canvas to make adjustments.
               </p>
             </div>
+
+            {/* Tool Instructions */}
+            <div className="mt-4 p-4 bg-gray-50 rounded-lg">
+              <h4 className="text-sm font-semibold text-gray-700 mb-2">Tool Guide</h4>
+              <div className="text-xs text-gray-600 space-y-1">
+                {activeMenu === 'crop' && <p>Click and drag on the image to select crop area</p>}
+                {activeMenu === 'draw' && <p>Click and drag to draw freely on the image</p>}
+                {activeMenu === 'text' && <p>Click on the image to add text</p>}
+                {activeMenu === 'shape' && <p>Select from various shapes to add</p>}
+                {activeMenu === 'rotate' && <p>Click to rotate image 90 degrees</p>}
+                {activeMenu === 'flip' && <p>Click to flip image horizontally</p>}
+                {activeMenu === 'filter' && <p>Apply various filters to enhance your image</p>}
+                {activeMenu === 'mask' && <p>Use eraser tool to mask parts of the image</p>}
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -231,6 +297,20 @@ const TUIImageEditor: React.FC<TUIImageEditorProps> = ({ imageUrl, onSave, onClo
             align-items: center !important;
             justify-content: center !important;
             height: 100% !important;
+          }
+          
+          /* Hide default controls that might interfere */
+          .tui-image-editor-controls {
+            display: none !important;
+          }
+          
+          .tui-image-editor-controls-buttons {
+            display: none !important;
+          }
+          
+          /* Style the canvas area */
+          .tui-image-editor-canvas {
+            border-radius: 8px !important;
           }
         `
       }} />
